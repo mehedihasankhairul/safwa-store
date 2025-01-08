@@ -1,0 +1,24 @@
+@import "@fortawesome/fontawesome-free/css/all.min.css";
+
+/* Tailwind base styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your global styles */
+body {
+  font-family: "Arial", sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Other custom styles */
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  color: #0056b3;
+}
