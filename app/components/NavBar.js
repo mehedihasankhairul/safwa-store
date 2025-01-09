@@ -3,6 +3,7 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import logo from "../../public/assets/logo.png";
 import AuthModal from "./AuthModal";
+import Link from "next/link";
 
 
 const Navbar = () => {
@@ -107,14 +108,14 @@ const Navbar = () => {
       <nav className="bg-red-800">
         <ul className="flex flex-wrap justify-center items-center space-x-6 text-sm font-medium py-2">
           <li>
-            <a href="/" className="hover:text-gray-300">
+            <Link href="/" className="hover:text-gray-300">
               হোম
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/all-books" className="hover:text-gray-300">
+            <Link href="/books" className="hover:text-gray-300">
               সকল বই
-            </a>
+            </Link>
           </li>
           <li className="relative group">
             <a href="/categories" className="hover:text-gray-300">

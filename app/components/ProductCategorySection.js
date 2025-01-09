@@ -1,9 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import { getBooksByCategory } from "@/utils/api";
+import Image from "next/image";
+import dummy from "../../public/assets/dummy.png";
 
 const ProductCategorySection = ({ category, title }) => {
   const [books, setBooks] = useState([]);
@@ -35,16 +37,33 @@ const ProductCategorySection = ({ category, title }) => {
           >
             {books.map((book) => (
               <SwiperSlide key={book._id}>
-                <div className="p-4 bg-white shadow-md rounded-md border text-center">
-                  <img
-                    src={book.image || "/default-book.jpg"}
+                <div className="relative p-2 bg-white shadow-md rounded-md border text-center max-h-[500] max-w-[250] ">
+                  {/* Discount Badge */}
+                  {book.discount > 0 && (
+                    <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                      {book.discount}%
+                    </div>
+                  )}
+                  {/* Book Cover */}
+                  <Image
+                    src={book.image || dummy}
                     alt={book.title}
-                    className="w-full h-40 object-cover rounded-md"
+                    height={60}
+                    width={100}
+                    className=" object-cover rounded-md w-full"
                   />
-                  <h3 className="text-lg font-bold mt-4">{book.title}</h3>
-                  <p>Author: {book.author}</p>
-                  <p>Price: ${book.price}</p>
-                  <p>Discount: {book.discount}%</p>
+                  {/* Book Details */}
+                  <div className="mt-4 ">
+                    <h3 className="text-md text-nowrap hover:text-balance font-bold">{book.title}</h3>
+                    <p className="text-sm  text-gray-600">লেখক: {book.author}</p>
+                    <p className="text-sm text-gray-600">প্রকাশনায়: {book.publication || "Unknown"}</p>
+                    <div className="mt-2">
+                      <p className="text-sm">
+                        <span className="text-red-500 line-through mr-2">${book.printedPrice}</span>
+                        <span className="text-green-600 font-bold">${book.salePrice || book.discountedPrice}</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </SwiperSlide>
             ))}

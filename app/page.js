@@ -9,21 +9,26 @@ export default function Home() {
       <Banner />
 
       <ProductCategorySection
-        category="Fiction"
+        category=""
         title="নতুন প্রকাশিত বইসমূহ"
       />
+
       <ProductCategorySection
-        category="Seerah"
+        category="তাওহীদ"
+        title="তাওহীদ বইসমূহ"
+      />
+      <ProductCategorySection
+        category="সিরাত"
         title="সিরাত বইসমূহ"
       />
       <ProductCategorySection
-        category="Hadith"
+        category="হাদিস"
         title="হাদিস বইসমূহ"
       />
 
       <ProductCategorySection
-        category="Non-Fiction"
-        title="Non-Fiction Books"
+        category=""
+        title="সর্বশেষ বইসমূহ"
       />
     </div>
   );
