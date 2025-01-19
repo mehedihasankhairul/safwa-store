@@ -1,15 +1,20 @@
-"use client"
+"use client";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import logo from "../../public/assets/logo.png";
+import defaultImg from "../../public/assets/dummy.png";
 import AuthModal from "./AuthModal";
 import Link from "next/link";
-
+import { useRouter } from "next/navigation";
+import { getAllBooks } from "@/utils/api"; // Import API function for search
 
 const Navbar = () => {
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // Check if user is logged in
@@ -27,28 +32,39 @@ const Navbar = () => {
     alert("You have been logged out.");
   };
 
-  const handleSearchBooks = (e) => {
-    e.preventDefault();
-    // log the search query
-    console.log("Search Query: ", e.target.value);
+  const handleSearchChange = async (e) => {
+    const query = e.target.value.trim();
+    setSearchQuery(query);
+
+    if (query === "") {
+      setSearchResults([]);
+      setIsDropdownVisible(false); // Close the dropdown when the search query is empty
+      return;
+    }
+
+    try {
+      // Fetch books matching the search query
+      const response = await getAllBooks({ search: query });
+      setSearchResults(response.books || []);
+      setIsDropdownVisible(true); // Show the dropdown if there are results
+    } catch (error) {
+      console.error("Error searching books:", error);
+      setIsDropdownVisible(false); // Close the dropdown in case of an error
+    }
   };
-  //  handle search btn click
-  const handleSearchBtn = (e) => {
+
+
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    // log the search query
-    console.log("Search Query: ", e.target.value);
-
+    if (searchQuery.trim()) {
+      router.push(`/search?query=${searchQuery}`);
+      setIsDropdownVisible(false);
+    }
   };
-
-
-
-
 
   return (
     <header className="bg-red-900 text-white">
-      {/* Top Section */}
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center py-4 px-6 space-y-4 md:space-y-0">
-        {/* Logo */}
         <div className="flex items-center space-x-2">
           <Image height={90} width={80} src={logo} alt="Logo" />
           <h1 className="text-xl md:text-2xl font-bold whitespace-nowrap">
@@ -58,23 +74,71 @@ const Navbar = () => {
 
         {/* Search Bar */}
         <div className="flex-grow flex px-4 items-center relative">
-          <input
-            onChange={handleSearchBooks}
-            type="text"
-            placeholder="বইয়ের নাম ও লেখক দিয়ে অনুসন্ধান করুন"
-            className="w-full p-2 rounded-l-lg focus:outline-none text-black"
-          />
-          <button
-            onClick={handleSearchBtn}
-            className="bg-[#720000] text-white px-4 py-2 rounded-r-lg hover:bg-[#5a0000] transition-colors"
-          >
-            Search
-          </button>
+          <form className="w-full flex" onSubmit={handleSearchSubmit}>
+            <input
+              value={searchQuery}
+              onChange={handleSearchChange}
+              type="text"
+              placeholder="বইয়ের নাম ও লেখক দিয়ে অনুসন্ধান করুন"
+              className="w-full p-2 rounded-l-lg focus:outline-none text-black"
+            />
+            <button
+              type="submit"
+              className="bg-[#720000] text-white px-4 py-2 rounded-r-lg hover:bg-[#5a0000] transition-colors"
+            >
+              Search
+            </button>
+          </form>
+
+          {/* Dropdown for search results */}
+          {/* Dropdown for search results */}
+          {isDropdownVisible && searchQuery && (
+            <div className="absolute top-full left-0 bg-white text-black w-full mt-1 rounded-md shadow-md z-10">
+              {searchResults.length > 0 ? (
+                searchResults.map((book) => (
+                  <div
+                    key={book._id}
+                    className="p-2 flex justify-between items-center hover:bg-gray-100 cursor-pointer"
+                    onClick={() => {
+                      router.push(`/books/${book._id}`);
+                      setIsDropdownVisible(false);
+                    }}
+                  >
+                    {/* Left Section */}
+                    <div className="flex items-center space-x-4">
+                      {console.log(book)}
+                      <Image
+                        src={book.image || defaultImg}
+                        alt={book.title}
+                        width={50}
+                        height={75}
+                        className="rounded-md object-cover"
+                      />
+                      <div className=" text-left">
+                        <h3 className="text-sm font-bold">{book.title}</h3>
+                        <p className="text-xs text-gray-600">{book.author}</p>
+                        <p className="text-xs text-gray-600">{book.publication}</p>
+
+                      </div>
+                    </div>
+
+                    {/* Right Section */}
+                    <div className="text-md font-bold text-gray-800">
+                      {book.discountedPrice || book.printedPrice} ৳
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-2 text-center">No results found</div>
+              )}
+            </div>
+          )}
+
+
         </div>
 
-        {/* User Options */}
-        <div className="flex items-center space-x-4 bg-white text-red-900 px-4 py-2 rounded-sm">
 
+        <div className="flex items-center space-x-4 bg-white text-red-900 px-4 py-2 rounded-sm">
           {user ? (
             <>
               <span>Welcome, {user.name}</span>
@@ -83,15 +147,19 @@ const Navbar = () => {
               </button>
             </>
           ) : (
-            <button onClick={() => setIsModalOpen(true)} className="text-sm underline">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="text-sm underline"
+            >
               Login/Register
             </button>
           )}
 
-
-          {/* Auth Modal For login/registration */}
-          <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} setUser={setUser} />
-
+          <AuthModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            setUser={setUser}
+          />
 
           <div className="relative">
             <button>
@@ -104,7 +172,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Navbar Links */}
       <nav className="bg-red-800">
         <ul className="flex flex-wrap justify-center items-center space-x-6 text-sm font-medium py-2">
           <li>
@@ -121,7 +188,6 @@ const Navbar = () => {
             <a href="/categories" className="hover:text-gray-300">
               বিষয় ভিত্তিক
             </a>
-            {/* Dropdown */}
             <ul className="absolute hidden group-hover:block bg-red-800 text-white shadow-lg p-2 rounded-lg">
               <li>
                 <a

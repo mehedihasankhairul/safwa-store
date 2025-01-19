@@ -1,6 +1,7 @@
 import Banner from "./components/Banner";
 import NavBar from "./components/NavBar";
 import ProductCategorySection from "./components/ProductCategorySection";
+import Footer from "./components/Footer";
 
 export default function Home() {
   return (
@@ -30,6 +31,7 @@ export default function Home() {
         category=""
         title="সর্বশেষ বইসমূহ"
       />
+      <Footer />
     </div>
   );
 }
