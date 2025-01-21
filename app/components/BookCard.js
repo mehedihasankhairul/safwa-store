@@ -11,7 +11,7 @@ const BookCard = ({ book }) => {
     <div style={{
       width: "200px", // Custom width
       height: "400px", // Custom height
-    }} className="relative bg-white shadow-md rounded-md border text-center hover:shadow-lg transition duration-300 flex flex-col items-center group w-full max-w-xs mx-auto">
+    }} className="relative bg-white shadow-md rounded-md border text-center hover:shadow-lg transition duration-300 flex flex-col items-center group w-full max-w-xs mt-5 mx-auto">
       {/* Discount Badge */}
       {book.discount > 0 && (
         <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
