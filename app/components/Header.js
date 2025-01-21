@@ -1,10 +1,16 @@
+import Image from 'next/image';
 import React from 'react'
+import mainLogo from '../../public/assets/logo.png';
+import Link from 'next/link';
+
 
 const Header = () => (
-  <header className="flex items-center justify-between bg-red-700 text-white p-4">
-    <img src="/logo.png" alt="Logo" className="h-10" />
+
+  <header className="flex items-center  justify-between bg-red-700 text-white p-4">
+    <div className="flex"><Image src={mainLogo} height={20} width={40} alt="Logo" className="h-10" />
+      <h1 className="text-2xl font-bold">Safwa Store</h1></div>
     <nav className="flex gap-4">
-      <a href="#">Home</a>
+      <Link href="/">Home </Link>
       <a href="#">Categories</a>
       <a href="#">Best Sellers</a>
       <a href="#">Contact</a>
@@ -20,6 +26,8 @@ const Header = () => (
       </button>
     </div>
   </header>
+
+
 );
 
 

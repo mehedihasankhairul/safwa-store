@@ -4,8 +4,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import { getBooksByCategory } from "@/utils/api";
-import Image from "next/image";
-import dummy from "../../public/assets/dummy.png";
+import BookCard from "./BookCard";
 
 const ProductCategorySection = ({ category, title }) => {
   const [books, setBooks] = useState([]);
@@ -30,41 +29,15 @@ const ProductCategorySection = ({ category, title }) => {
             autoplay={{ delay: 3000 }}
             slidesPerView={1}
             breakpoints={{
-              640: { slidesPerView: 2, spaceBetween: 10 },
-              768: { slidesPerView: 3, spaceBetween: 20 },
-              1024: { slidesPerView: 4, spaceBetween: 30 },
+              320: { slidesPerView: 2, spaceBetween: 10 },
+              640: { slidesPerView: 3, spaceBetween: 10 },
+              768: { slidesPerView: 4, spaceBetween: 20 },
+              1024: { slidesPerView: 5, spaceBetween: 30 },
             }}
           >
             {books.map((book) => (
               <SwiperSlide key={book._id}>
-                <div className="relative p-2 bg-white shadow-md rounded-md border text-center max-h-[500] max-w-[250] ">
-                  {/* Discount Badge */}
-                  {book.discount > 0 && (
-                    <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                      {book.discount}%
-                    </div>
-                  )}
-                  {/* Book Cover */}
-                  <Image
-                    src={book.image || dummy}
-                    alt={book.title}
-                    height={60}
-                    width={100}
-                    className=" object-cover rounded-md w-full"
-                  />
-                  {/* Book Details */}
-                  <div className="mt-4 ">
-                    <h3 className="text-md text-nowrap hover:text-balance font-bold">{book.title}</h3>
-                    <p className="text-sm  text-gray-600">লেখক: {book.author}</p>
-                    <p className="text-sm text-gray-600">প্রকাশনায়: {book.publication || "Unknown"}</p>
-                    <div className="mt-2">
-                      <p className="text-sm">
-                        <span className="text-red-500 line-through mr-2">${book.printedPrice}</span>
-                        <span className="text-green-600 font-bold">${book.salePrice || book.discountedPrice}</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <BookCard book={book} /> {/* Use the BookCard component */}
               </SwiperSlide>
             ))}
           </Swiper>

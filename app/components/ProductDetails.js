@@ -1,10 +1,15 @@
+import Image from 'next/image';
 import React from 'react'
+import AddToCartButton from './AddToCartButton';
+import dummyBookCover from "../../public/assets/dummy.png";
 
 const ProductDetails = ({ product }) => (
-  <div className="flex gap-8 p-4">
-    <img
-      src={product.image}
-      alt={product.title}
+  console.log("from product details page :", product),
+  < div className="flex gap-8 p-4" >
+    <Image
+
+      src={product.cover || dummyBookCover}
+      alt={product.title || "Book Cover"}
       className="w-1/3 rounded border"
     />
     <div className="w-2/3">
@@ -18,11 +23,16 @@ const ProductDetails = ({ product }) => (
       </div>
       <p className="mt-4">{product.description}</p>
       <div className="mt-4 flex items-center gap-4">
-        <button className="bg-red-700 text-white px-4 py-2 rounded">Add to Cart</button>
+        <div style={{ border: "1px solid #ccc", padding: "1rem", margin: "1rem" }}>
+          <h3>{product.name}</h3>
+          <p>Price: ৳ {product.price}</p>
+          {/* Pass product data to the AddToCartButton */}
+          <AddToCartButton item={product} />
+        </div>
         <button className="bg-green-700 text-white px-4 py-2 rounded">Buy It Now</button>
       </div>
     </div>
-  </div>
+  </div >
 );
 
 

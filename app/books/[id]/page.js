@@ -4,26 +4,20 @@ import { useParams } from "next/navigation"; // Or `useRouter` in older Next.js 
 import { getBookById } from "@/utils/api";
 import BookDetails from "../../components/BookDetails";
 
+
 const BookPage = () => {
   const { id } = useParams();
+
   const [book, setBook] = useState(null);
 
   useEffect(() => {
-    const fetchBook = async () => {
-      try {
-        const bookData = await getBookById(id);
-        setBook(bookData);
-      } catch (error) {
-        console.error("Error fetching book:", error);
-      }
-    };
+    getBookById(id).then((data) => setBook(data));
+  }
+    , [id]);
 
-    fetchBook();
-  }, [id]);
-
-  return <>
+  return <div className=" ">
     <BookDetails book={book} />;
-  </>
+  </div>
 };
 
 export default BookPage;

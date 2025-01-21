@@ -5,33 +5,34 @@ import Footer from "./components/Footer";
 
 export default function Home() {
   return (
-    <div className="container mx-auto text-center">
+    <>
       <NavBar />
-      <Banner />
+      <div className="container mx-auto text-center">
+        <Banner />
+        <ProductCategorySection
+          category=""
+          title="নতুন প্রকাশিত বইসমূহ"
+        />
 
-      <ProductCategorySection
-        category=""
-        title="নতুন প্রকাশিত বইসমূহ"
-      />
+        <ProductCategorySection
+          category="তাওহীদ"
+          title="তাওহীদ বইসমূহ"
+        />
+        <ProductCategorySection
+          category="সিরাত"
+          title="সিরাত বইসমূহ"
+        />
+        <ProductCategorySection
+          category="হাদিস"
+          title="হাদিস বইসমূহ"
+        />
 
-      <ProductCategorySection
-        category="তাওহীদ"
-        title="তাওহীদ বইসমূহ"
-      />
-      <ProductCategorySection
-        category="সিরাত"
-        title="সিরাত বইসমূহ"
-      />
-      <ProductCategorySection
-        category="হাদিস"
-        title="হাদিস বইসমূহ"
-      />
-
-      <ProductCategorySection
-        category=""
-        title="সর্বশেষ বইসমূহ"
-      />
+        <ProductCategorySection
+          category=""
+          title="সর্বশেষ বইসমূহ"
+        />
+      </div>
       <Footer />
-    </div>
+    </>
   );
 }
