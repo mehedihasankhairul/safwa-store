@@ -19,7 +19,7 @@ const BookCard = ({ book }) => {
         </div>
       )}
       {/* Book Cover */}
-      <div className="w-full h-[250]  aspect-square flex items-center justify-center relative overflow-hidden">
+      <div className="w-full h-[280]  aspect-square flex items-center justify-center relative overflow-hidden">
         <Image
         
           src={book.image || dummy}
