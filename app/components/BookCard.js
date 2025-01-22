@@ -47,6 +47,7 @@ const BookCard = ({ book }) => {
             <span className="text-red-500 line-through mr-2">
               ৳ {book.printedPrice}
             </span>
+            {/* sale price */}
             <span className="text-green-600 text-md font-bold">
               ৳ {book.salePrice || book.discountedPrice}
             </span>
