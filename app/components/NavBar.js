@@ -7,6 +7,9 @@ import AuthModal from "./AuthModal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getAllBooks } from "@/utils/api"; // Import API function for search
+import { FaShoppingCart, FaTimes } from "react-icons/fa";
+import useCartStore from "../../store/cartStore"; // Import Zustand store
+import CartPage from "./CartPage"; // Import the CartPage component
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,13 +17,16 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false); // State for cart drawer
+  const { cartItems } = useCartStore();
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const router = useRouter();
 
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem("token");
     if (token) {
-      const userName = localStorage.getItem("userName"); // Store name separately
+      const userName = localStorage.getItem("userName");
       setUser({ name: userName });
     }
   }, []);
@@ -38,21 +44,19 @@ const Navbar = () => {
 
     if (query === "") {
       setSearchResults([]);
-      setIsDropdownVisible(false); // Close the dropdown when the search query is empty
+      setIsDropdownVisible(false);
       return;
     }
 
     try {
-      // Fetch books matching the search query
       const response = await getAllBooks({ search: query });
       setSearchResults(response.books || []);
-      setIsDropdownVisible(true); // Show the dropdown if there are results
+      setIsDropdownVisible(true);
     } catch (error) {
       console.error("Error searching books:", error);
-      setIsDropdownVisible(false); // Close the dropdown in case of an error
+      setIsDropdownVisible(false);
     }
   };
-
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -90,8 +94,6 @@ const Navbar = () => {
             </button>
           </form>
 
-          {/* Dropdown for search results */}
-          {/* Dropdown for search results */}
           {isDropdownVisible && searchQuery && (
             <div className="absolute top-full left-0 bg-white text-black w-full mt-1 rounded-md shadow-md z-10">
               {searchResults.length > 0 ? (
@@ -104,9 +106,7 @@ const Navbar = () => {
                       setIsDropdownVisible(false);
                     }}
                   >
-                    {/* Left Section */}
                     <div className="flex items-center space-x-4">
-                      {console.log(book)}
                       <Image
                         src={book.image || defaultImg}
                         alt={book.title}
@@ -114,15 +114,12 @@ const Navbar = () => {
                         height={75}
                         className="rounded-md object-cover"
                       />
-                      <div className=" text-left">
+                      <div className="text-left">
                         <h3 className="text-sm font-bold">{book.title}</h3>
                         <p className="text-xs text-gray-600">{book.author}</p>
                         <p className="text-xs text-gray-600">{book.publication}</p>
-
                       </div>
                     </div>
-
-                    {/* Right Section */}
                     <div className="text-md font-bold text-gray-800">
                       {book.discountedPrice || book.printedPrice} ৳
                     </div>
@@ -133,10 +130,7 @@ const Navbar = () => {
               )}
             </div>
           )}
-
-
         </div>
-
 
         <div className="flex items-center space-x-4 bg-white text-red-900 px-4 py-2 rounded-sm">
           {user ? (
@@ -162,73 +156,37 @@ const Navbar = () => {
           />
 
           <div className="relative">
-            <button>
-              <i className="fas fa-shopping-cart text-xl"></i>
+            <button onClick={() => setIsCartOpen(!isCartOpen)}>
+              <FaShoppingCart className="text-xl" />
             </button>
             <span className="absolute top-0 right-0 bg-white text-red-900 text-xs font-bold rounded-full px-2">
-              0
+              {totalItems}
             </span>
           </div>
         </div>
       </div>
 
-      <nav className="bg-red-800">
-        <ul className="flex flex-wrap justify-center items-center space-x-6 text-sm font-medium py-2">
-          <li>
-            <Link href="/" className="hover:text-gray-300">
-              হোম
-            </Link>
-          </li>
-          <li>
-            <Link href="/books" className="hover:text-gray-300">
-              সকল বই
-            </Link>
-          </li>
-          <li className="relative group">
-            <a href="/categories" className="hover:text-gray-300">
-              বিষয় ভিত্তিক
-            </a>
-            <ul className="absolute hidden group-hover:block bg-red-800 text-white shadow-lg p-2 rounded-lg">
-              <li>
-                <a
-                  href="/categories/quran-tafseer"
-                  className="block hover:bg-gray-400 px-4 py-2 hover:text-gray-300"
-                >
-                  কুরআন ও তাফসীর
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/categories/al-hadith"
-                  className="block hover:bg-gray-400 px-4 py-2 hover:text-gray-300"
-                >
-                  আল হাদিস
-                </a>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <a href="/writers" className="hover:text-gray-300">
-              লেখকগণ
-            </a>
-          </li>
-          <li>
-            <a href="/publications" className="hover:text-gray-300">
-              প্রকাশনী
-            </a>
-          </li>
-          <li>
-            <a href="/packages" className="hover:text-gray-300">
-              প্যাকেজ
-            </a>
-          </li>
-          <li>
-            <a href="/blog" className="hover:text-gray-300">
-              ব্লগ
-            </a>
-          </li>
-        </ul>
-      </nav>
+      <div
+        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-40 ${isCartOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+      >
+        <button
+          onClick={() => setIsCartOpen(false)}
+          className="absolute top-4 right-4 text-gray-600 hover:text-red-600"
+        >
+          <FaTimes className="text-xl" />
+        </button>
+
+        {/* Cart Content */}
+        <CartPage />
+      </div>
+
+      {isCartOpen && (
+        <div
+          onClick={() => setIsCartOpen(false)}
+          className="fixed inset-0 bg-black bg-opacity-50 z-30"
+        />
+      )}
     </header>
   );
 };

@@ -8,10 +8,9 @@ const BookCard = ({ book }) => {
   const addToCart = useCartStore((state) => state.addToCart); // Access the addToCart method from Zustand
 
   return (
-    <div style={{
-      width: "200px", // Custom width
-      height: "400px", // Custom height
-    }} className="relative bg-white shadow-md rounded-md border text-center hover:shadow-lg transition duration-300 flex flex-col items-center group w-full max-w-xs mt-5 mx-auto">
+    <div
+      className="relative mt-5 bg-white shadow-md rounded-md border text-center hover:shadow-lg transition duration-300 flex flex-col items-center group w-full max-w-[220px] mx-auto h-[400px] overflow-hidden"
+    >
       {/* Discount Badge */}
       {book.discount > 0 && (
         <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
@@ -19,13 +18,13 @@ const BookCard = ({ book }) => {
         </div>
       )}
       {/* Book Cover */}
-      <div className="w-full h-[280]  aspect-square flex items-center justify-center relative overflow-hidden">
+      <div className="w-full h-[220px] flex items-center justify-center relative overflow-hidden">
         <Image
-        
           src={book.image || dummy}
           alt={book.title}
           fill
-          className="object-fit rounded-md"
+          className="object-cover rounded-md pt-2"
+          style={{ objectFit: "contain" }} // Ensures the image fits like a book
         />
         {/* Add to Cart Button */}
         <button
@@ -36,18 +35,20 @@ const BookCard = ({ book }) => {
         </button>
       </div>
       {/* Book Details */}
-      <div className="mt-4 flex flex-col flex-grow justify-between px-4 pb-4">
-        <h3 className="text-sm font-bold truncate">{book.title}</h3>
-        <p className="text-xs text-gray-600">লেখক: {book.author}</p>
-        <p className="text-xs text-gray-600">
+      <div className="mt-4 flex flex-col flex-grow justify-between px-4 pb-4 w-full">
+        <h3 className="text-sm font-bold line-clamp-2 break-words w-full">
+          {book.title}
+        </h3>
+        <p className="text-xs text-gray-600 truncate w-full">লেখক: {book.author}</p>
+        <p className="text-xs text-gray-600 truncate w-full">
           প্রকাশনায়: {book.publication || "Unknown"}
         </p>
-        <div className="mt-2">
-          <p className="text-sm">
+        <div className="mt-2 w-full">
+          <p className="text-sm truncate">
             <span className="text-red-500 line-through mr-2">
               ৳ {book.printedPrice}
             </span>
-            {/* sale price */}
+            {/* Sale Price */}
             <span className="text-green-600 text-md font-bold">
               ৳ {book.salePrice || book.discountedPrice}
             </span>
