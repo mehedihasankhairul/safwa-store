@@ -18,26 +18,41 @@ const CheckoutPage = () => {
     0
   );
 
-  const handleOrderSubmit = (e) => {
-    e.preventDefault();
-
+  const handlePlaceOrder = async () => {
     if (cartItems.length === 0) {
-      alert("Your cart is empty. Please add items to your cart before placing an order.");
+      alert("Your cart is empty!");
       return;
     }
 
-    const orderDetails = {
-      fullName,
-      address,
-      phoneNumber,
-      paymentMethod,
-      bkashTransactionNumber: paymentMethod === "bKash" ? bkashTransactionNumber : null,
-      items: cartItems,
-      totalPrice,
-    };
+    setIsSubmitting(true);
 
-    console.log("Order Submitted:", orderDetails);
-    alert("Your order has been placed!");
+    try {
+      // Create order data
+      const orderData = {
+        items: cartItems,
+        shipping: {
+          name: formData.fullName,
+          address: formData.address,
+          phone: formData.phone,
+        },
+        payment: {
+          method: formData.paymentMethod,
+          transactionId: formData.transactionId || null,
+        },
+      };
+
+      // Call API to create the order
+      const order = await createOrder(orderData);
+
+      // Clear the cart and redirect to the order details page
+      clearCart();
+      router.push(`/order/${order.id}`); // Redirect to the order details page
+    } catch (error) {
+      console.error("Failed to place order:", error);
+      alert("An error occurred while placing the order. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
