@@ -29,11 +29,15 @@ const useCartStore = create(
             item._id === id ? { ...item, quantity } : item
           ),
         })),
+
+      clearCart: () => set({ cartItems: [] }),
     }),
     {
       name: "cart-storage", // Name of the local storage key
     }
   )
 );
+
+// clear the c
 
 export default useCartStore;

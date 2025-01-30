@@ -91,7 +91,11 @@ const CartPage = () => {
         </p>
         <button
           onClick={() => router.push("/checkout")} // Redirect to Checkout Page
-          className="w-full bg-red-700 hover:bg-red-800 text-white py-2 mt-4 rounded-lg"
+          disabled={cartItems.length === 0}
+          className={`w-full py-2 mt-4 rounded-lg ${cartItems.length === 0
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-red-700 hover:bg-red-800 text-white"
+            }`}
         >
           Proceed to Checkout
         </button>

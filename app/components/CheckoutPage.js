@@ -1,65 +1,207 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import useCartStore from "@/store/cartStore";
 import Image from "next/image";
 import dummy from "../../public/assets/dummy.png";
+import bdLocation from "../data/bd-geo-location.js";
+
+
+
 
 const CheckoutPage = () => {
-  const { cartItems } = useCartStore();
-  const [fullName, setFullName] = useState("");
-  const [address, setAddress] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
-  const [bkashTransactionNumber, setBkashTransactionNumber] = useState("");
+  const authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OTM1ZTUxYzA0MTZmYjA1ZjA3NmYyMCIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzM3NzExMjU1LCJleHAiOjE3MzgzMTYwNTV9.CFMFHxQL0jUxUj9eUsnA0yRRNcl516BT7DSr_V9Zg6I"
+  const { cartItems, clearCart } = useCartStore();
+
+  
+
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
+    division: "",
+    district: "",
+    upazila: "",
+    paymentMethod: "cod",
+    transactionId: "",
+    notes: ""
+  });
+
+  const [selectedDivision, setSelectedDivision] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedUpazila, setSelectedUpazila] = useState("");
+
+  const [districts, setDistricts] = useState([]);
+  const [upazilas, setUpazilas] = useState([]);
+
+ 
 
   const totalPrice = cartItems.reduce(
     (total, item) => total + item.salePrice * item.quantity,
     0
   );
+  // Handle division selection
+  const handleDivisionChange = (e) => {
+    const divisionId = e.target.value;
+    setSelectedDivision(divisionId);
+    setFormData({ ...formData, division: divisionId }); // ✅ Ensure it's updated
+    setSelectedDistrict(""); // Reset district selection
+    setSelectedUpazila(""); // Reset upazila selection
 
-  const handlePlaceOrder = async () => {
-    if (cartItems.length === 0) {
-      alert("Your cart is empty!");
+    // Find the selected division from JSON
+    const division = bdLocation.find((div) => div.id === divisionId);
+
+    // Update districts list
+    setDistricts(division ? division.districts : []);
+    setUpazilas([]); // Reset upazilas when division changes
+   
+  };
+
+  // Handle district selection
+  const handleDistrictChange = (e) => {
+    const districtId = e.target.value;
+    setSelectedDistrict(districtId);
+    setFormData({ ...formData, district: districtId }); // ✅ Ensure it's updated
+
+
+    // Find selected district in the division
+    const selectedDivisionData = bdLocation.find((div) =>
+      div.districts.some((dist) => dist.id === districtId)
+    );
+
+    if (selectedDivisionData) {
+      const selectedDistrictData = selectedDivisionData.districts.find(
+        (dist) => dist.id === districtId
+      );
+
+      if (selectedDistrictData) {
+        setUpazilas(selectedDistrictData.upazilas || []); // Update upazilas
+      }
+    } else {
+      setUpazilas([]); // Reset if no upazilas found
+    }
+
+    setSelectedUpazila(""); // Reset upazila selection when district changes
+  };
+
+
+  // Handle upazila selection
+  const handleUpazilaChange = (e) => {
+    const upazilaId = e.target.value;
+    setFormData({ ...formData, upazila: upazilaId }); // ✅ Ensure it's updated
+
+    // Check if upazila exists in current district
+    const isValidUpazila = upazilas.some((upz) => upz.id === upazilaId);
+
+    if (isValidUpazila) {
+      setSelectedUpazila(upazilaId);
+    } else {
+      setSelectedUpazila(""); // Reset if not valid
+    }
+  };
+
+  const getValidPaymentMethod = (method) => {
+    if (method === "Cash On Delivery") return "cod"; // Use the correct API format
+    if (method === "bkash") return "bkash";
+    if (method === "nagad") return "nagad";
+    return ""; // Return empty if invalid
+  };
+
+
+
+
+
+  // Handle input change
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+// console.log(cartItems)
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Ensure cart is not empty
+    const books = cartItems?.map((item) => ({
+      bookId: item._id,
+      quantity: item.quantity
+    })) || [];
+
+
+    if (books.length === 0) {
+      alert("Your cart is empty. Add books before placing an order.");
       return;
     }
 
-    setIsSubmitting(true);
+    // Ensure payment method is valid
+    const validPaymentMethod = getValidPaymentMethod(formData.paymentMethod);
+    if (!validPaymentMethod) {
+      alert("Invalid payment method selected.");
+      return;
+    }
+
+    const orderData = {
+      books: books,
+      fullAddress: formData.address,
+      division: selectedDivision,
+      district: selectedDistrict,
+      upazila: selectedUpazila,
+      contactInfo: {
+        phone: formData.phone,
+        email: formData.email,
+      },
+      payment: {
+        method: validPaymentMethod,
+        transactionId: formData.transactionId || "",
+        status: formData.paymentMethod === "cash-on-delivery" ? "Pending" : "Paid",
+      },
+      notes: formData.notes,
+    };
+
+    console.log("Sending Order Data:", JSON.stringify(orderData, null, 2)); // Debugging output
 
     try {
-      // Create order data
-      const orderData = {
-        items: cartItems,
-        shipping: {
-          name: formData.fullName,
-          address: formData.address,
-          phone: formData.phone,
-        },
-        payment: {
-          method: formData.paymentMethod,
-          transactionId: formData.transactionId || null,
-        },
-      };
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json",
+        
+        Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify(orderData),
+      });
 
-      // Call API to create the order
-      const order = await createOrder(orderData);
+      const textResponse = await response.text();
+      console.log("Raw API Response:", textResponse);
 
-      // Clear the cart and redirect to the order details page
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${textResponse}`);
+      }
+
+      const responseData = JSON.parse(textResponse);
+      console.log("Parsed API Response:", responseData);
+
       clearCart();
-      router.push(`/order/${order.id}`); // Redirect to the order details page
+      router.push("/order-success");
     } catch (error) {
-      console.error("Failed to place order:", error);
-      alert("An error occurred while placing the order. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      console.error("Order submission failed:", error);
+      alert(`Order failed: ${error.message}`);
     }
   };
+
+
+
+
+
+
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">Checkout</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left Side - Cart Items */}
+
+        {/* Left Side - Order Summary */}
         <div className="bg-white shadow-md p-4 rounded-lg">
           <h2 className="text-lg font-bold mb-4">Order Summary</h2>
           {cartItems.length === 0 ? (
@@ -100,109 +242,149 @@ const CheckoutPage = () => {
         {/* Right Side - User Form */}
         <div className="bg-white shadow-md p-4 rounded-lg">
           <h2 className="text-lg font-bold mb-4">Shipping Information</h2>
-          <form onSubmit={handleOrderSubmit} className="space-y-4">
-            {/* Full Name */}
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium">
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              name="fullName"
+              placeholder="Full Name"
+              value={formData.fullName}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-md"
+            />
+
+            <input
+              type="number"
+              name="phone"
+              placeholder="Phone Number"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-md"
+              pattern="01[3-9][0-9]{8}"
+              title="Please enter a valid 11-digit Bangladeshi phone number."
+              
+              onKeyDown={(e) => {
+                const allowedKeys = ['Backspace', 'ArrowLeft', 'ArrowRight', 'Tab'];
+
+                if (!/^\d$/.test(e.key) && !allowedKeys.includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+            />
+
+            <input
+              type="email"
+              name="email"
+              placeholder="Email (Optional)"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md"
+            />
+
+            
+
+            { /*Divison, District & Upazila */}
+
+            {/* Division */}
+            <div className="flex space-x-4">
+              <select
+                name="division" 
+                required 
+                value={selectedDivision} 
+                onChange={handleDivisionChange}
+                className="w-1/2 p-2 border rounded-md input"
+              
+              >
+                <option value="">Select Division</option>
+                {bdLocation.map((division) => (
+                  <option key={division.id} value={division.id}>
+                    {division.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* District */}
+              <select
+                className="w-1/2 p-2 border rounded-md input"
                 required
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none"
-              />
+                value={selectedDistrict}
+                onChange={handleDistrictChange}
+                disabled={!selectedDivision}
+
+              >
+                <option value="">Select District</option>
+                {districts.map((district) => (
+                  <option key={district.id} value={district.id}>
+                    {district.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Upazila */} 
+              <select
+                className="w-1/2 p-2 border rounded-md"
+                required
+                value={selectedUpazila}
+                onChange={handleUpazilaChange}
+                disabled={!selectedDistrict}
+
+              >
+              
+                <option value="">Select Upazila</option>
+                {upazilas.map((upazila) => (
+                  <option key={upazila.id} value={upazila.id}>{upazila.name}</option>
+                 
+                  
+                ))}
+              </select>
             </div>
 
-            {/* Address */}
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium">
-                Address
-              </label>
-              <textarea
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                required
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none"
-              ></textarea>
-            </div>
+            <textarea
+              name="address"
+              placeholder="Address"
+              value={formData.address}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-md"
+            ></textarea>
 
-            {/* Phone Number */}
-            <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                id="phoneNumber"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                required
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none"
-              />
-            </div>
+           
 
             {/* Payment Method */}
-            <div>
-              <p className="block text-sm font-medium">Payment Method</p>
-              <div className="flex items-center space-x-4 mt-1">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="Cash on Delivery"
-                    checked={paymentMethod === "Cash on Delivery"}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="focus:ring-2 focus:ring-red-500"
-                  />
-                  <span>Cash on Delivery</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="bKash"
-                    checked={paymentMethod === "bKash"}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="focus:ring-2 focus:ring-red-500"
-                  />
-                  <span>bKash</span>
-                </label>
-              </div>
+            <div className="flex gap-4">
+              <label className="flex items-center">
+                <input type="radio" name="paymentMethod" value="cash-on-delivery" checked={formData.paymentMethod === "cash-on-delivery"} onChange={handleChange} />
+                <span className="ml-2">Cash on Delivery</span>
+              </label>
+              <label className="flex items-center">
+                <input type="radio" name="paymentMethod" value="bkash" checked={formData.paymentMethod === "bkash"} onChange={handleChange} />
+                <span className="ml-2">Bkash</span>
+              </label>
+              <label className="flex items-center">
+                <input type="radio" name="paymentMethod" value="nagad" checked={formData.paymentMethod === "nagad"} onChange={handleChange} />
+                <span className="ml-2">Nagad</span>
+              </label>
             </div>
 
-            {/* bKash Transaction Number */}
-            {paymentMethod === "bKash" && (
-              <div>
-                <label
-                  htmlFor="bkashTransactionNumber"
-                  className="block text-sm font-medium"
-                >
-                  bKash Transaction Number
-                </label>
-                <input
-                  type="text"
-                  id="bkashTransactionNumber"
-                  value={bkashTransactionNumber}
-                  onChange={(e) => setBkashTransactionNumber(e.target.value)}
-                  required
-                  className="w-full mt-1 p-2 border rounded-md focus:outline-none"
-                />
-              </div>
+            {/* Transaction ID (Bkash/Nagad Only) */}
+            {["bkash", "nagad"].includes(formData.paymentMethod) && (
+              <input
+                type="text" name="transactionId" placeholder="Transaction ID" required value={formData.transactionId} onChange={handleChange}
+                className="w-full p-2 border rounded-md input"
+              />
             )}
+            
+          
+            <textarea
+              name="notes"
+              placeholder="Additional Notes (Optional)"
+              value={formData.notes}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md"
+            ></textarea>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={cartItems.length === 0}
-              className={`w-full py-2 mt-4 rounded-lg ${cartItems.length === 0
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-red-700 hover:bg-red-800 text-white"
-                }`}
-            >
+            <button type="submit" className="w-full bg-red-700 text-white py-2 rounded-md">
               Place Order
             </button>
           </form>

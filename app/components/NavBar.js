@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import logo from "../../public/assets/logo.png";
 import defaultImg from "../../public/assets/dummy.png";
 import AuthModal from "./AuthModal";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getAllBooks } from "@/utils/api"; // Import API function for search
 import { FaShoppingCart, FaTimes } from "react-icons/fa";
@@ -145,7 +144,7 @@ const Navbar = () => {
               onClick={() => setIsModalOpen(true)}
               className="text-sm underline"
             >
-              Login/Register
+              Login / Register
             </button>
           )}
 
@@ -157,11 +156,14 @@ const Navbar = () => {
 
           <div className="relative">
             <button onClick={() => setIsCartOpen(!isCartOpen)}>
-              <FaShoppingCart className="text-xl" />
+              <FaShoppingCart className="text-md" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1 rounded-full">
+                  {totalItems}
+                </span>
+              )}
             </button>
-            <span className="absolute top-0 right-0 bg-white text-red-900 text-xs font-bold rounded-full px-2">
-              {totalItems}
-            </span>
+           
           </div>
         </div>
       </div>
@@ -174,7 +176,8 @@ const Navbar = () => {
           onClick={() => setIsCartOpen(false)}
           className="absolute top-4 right-4 text-gray-600 hover:text-red-600"
         >
-          <FaTimes className="text-xl" />
+        <FaTimes className="text-xl" />
+      
         </button>
 
         {/* Cart Content */}

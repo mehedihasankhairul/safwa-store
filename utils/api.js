@@ -1,4 +1,5 @@
-const BASE_URL = "https://bookshop-management-backend.onrender.com/api";
+// const BASE_URL = "https://bookshop-management-backend.onrender.com/api";
+const BASE_URL = "http://localhost:8000/api";
 
 // Fetch all books for the "সকল বই" section
 export const getAllBooksForAllSection = async () => {
@@ -111,6 +112,28 @@ export const deleteBook = async (id, token) => {
     return data;
   } catch (error) {
     console.error("Error deleting book:", error);
+    return null;
+  }
+};
+
+// Create a new order
+export const createOrder = async (orderData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`
+      },
+      body: JSON.stringify(orderData),
+    });
+
+    if (!response.ok) throw new Error(`Failed to create order: ${response.statusText}`);
+
+    const data = await response.json();
+    return data; // This should return the created order, including the order ID
+  } catch (error) {
+    console.error("Error creating order:", error);
     return null;
   }
 };
