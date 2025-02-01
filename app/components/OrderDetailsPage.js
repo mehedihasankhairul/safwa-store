@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import Image from "next/image";
-import dummyImage from "../../../public/assets/dummy.png";
+import dummyImage from "../../public/assets/dummy.png";
 
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
