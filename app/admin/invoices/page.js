@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaEye, FaEnvelope, FaSync, FaDownload, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaEye, FaEnvelope, FaSync, FaDownload, FaCheckCircle, FaTimesCircle, FaTrash } from "react-icons/fa";
 import Link from "next/link";
 
 const AdminInvoicesPage = () => {
@@ -9,11 +9,12 @@ const AdminInvoicesPage = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const authToken = process.env.NEXT_PUBLIC_AUTH_TOKEN;
+ 
 
   // ✅ Fetch all invoices for admin
   const fetchInvoices = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/invoices`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/invoices/admin/invoices`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -21,9 +22,9 @@ const AdminInvoicesPage = () => {
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-
       const data = await response.json();
       setInvoices(data);
+      
     } catch (error) {
       console.error("Failed to fetch admin invoices:", error);
     } finally {
@@ -31,10 +32,12 @@ const AdminInvoicesPage = () => {
     }
   };
 
+ 
+
   // ✅ Fetch invoice details for preview
   const fetchAdminInvoice = async (orderId) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/invoices/${orderId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/invoices/admin/invoices/${orderId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -44,7 +47,7 @@ const AdminInvoicesPage = () => {
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
 
       const invoiceData = await response.json();
-      setSelectedInvoice(invoiceData);
+      setSelectedInvoice(invoiceData); // ✅ Ensure invoice is set correctly
     } catch (error) {
       console.error("Failed to fetch admin invoice:", error);
     }
@@ -53,6 +56,9 @@ const AdminInvoicesPage = () => {
   useEffect(() => {
     fetchInvoices();
   }, []);
+
+  
+
 
   // ✅ Send invoice email
   const sendInvoiceEmail = async (orderId) => {
@@ -66,6 +72,28 @@ const AdminInvoicesPage = () => {
       console.error("Failed to send invoice email:", error);
     }
   };
+
+  const deleteInvoice = async (orderId) => {
+    if (!confirm("Are you sure you want to delete this invoice?")) return;
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/invoices/admin/invoices/${orderId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+
+      alert("Invoice deleted successfully!");
+      fetchInvoices(); // ✅ Refresh the invoices list
+    } catch (error) {
+      console.error("Failed to delete invoice:", error);
+    }
+  };
+
+
 
   return (
     <div className="container mx-auto p-6">
@@ -94,8 +122,8 @@ const AdminInvoicesPage = () => {
                   <td className="p-4 font-mono">{invoice.orderId}</td>
                   <td className="p-4">{invoice.userName || "N/A"}</td>
                   <td className="p-4 font-semibold">৳{invoice.totalAmount.toFixed(2)}</td>
-                  <td className="p-4">{new Date(invoice.orderDate).toLocaleDateString()} {new Date(invoice.orderDate).toLocaleTimeString()}</td>
-                  <td className="p-4">
+                  <td className="p-4">{invoice.orderDate?.split("T")[0]}</td>
+                  <td className="p-4 items-center">
                     {invoice.paymentStatus === "Paid" ? (
                       <span className="bg-green-200 text-green-700 px-3 py-1 rounded-md flex items-center">
                         <FaCheckCircle className="mr-2" /> Paid
@@ -111,21 +139,27 @@ const AdminInvoicesPage = () => {
                       onClick={() => fetchAdminInvoice(invoice.orderId)}
                       className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md flex items-center transition"
                     >
-                      <FaEye className="mr-2" /> Preview
+                      <FaEye className="mr-2" />
                     </button>
                     <button
                       onClick={() => sendInvoiceEmail(invoice.orderId)}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center transition"
                     >
-                      <FaEnvelope className="mr-2" /> Email
+                      <FaEnvelope className="mr-2" />
                     </button>
                     <Link
                       href={`${process.env.NEXT_PUBLIC_BASE_URL}${invoice.invoiceUrl}`}
                       target="_blank"
                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center transition"
                     >
-                      <FaDownload className="mr-2" /> Download
+                      <FaDownload className="mr-2" />
                     </Link>
+                    <button
+                      onClick={() => deleteInvoice(invoice.orderId)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md flex items-center transition"
+                    >
+                      <FaTrash className="mr-2" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -134,29 +168,24 @@ const AdminInvoicesPage = () => {
         </div>
       )}
 
-      {/* ✅ Invoice Preview Modal */}
       {selectedInvoice && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg w-11/12 max-w-lg shadow-lg">
             <h2 className="text-xl font-bold text-center mb-4">Invoice Preview</h2>
-
             <p><strong>Order ID:</strong> {selectedInvoice.orderId}</p>
             <p><strong>Total Amount:</strong> ৳{selectedInvoice.totalAmount.toFixed(2)}</p>
             <p><strong>Order Date:</strong> {new Date(selectedInvoice.orderDate).toLocaleString()}</p>
-            <p><strong>Payment Status:</strong>
+            <p>
+              <strong>Payment Status:</strong>
               <span className={`px-2 py-1 rounded-md ${selectedInvoice.paymentStatus === "Paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                 {selectedInvoice.paymentStatus}
               </span>
             </p>
-
-            {/* ✅ Show User Details */}
             <h3 className="text-lg font-semibold mt-4">Customer Details:</h3>
             <p><strong>Name:</strong> {selectedInvoice.userName}</p>
             <p><strong>Email:</strong> {selectedInvoice.email}</p>
             <p><strong>Phone:</strong> {selectedInvoice.phone}</p>
             <p><strong>Address:</strong> {selectedInvoice.fullAddress}</p>
-
-            {/* ✅ Show Ordered Books */}
             <h3 className="text-lg font-semibold mt-4">Books Ordered:</h3>
             <ul className="border rounded-md p-3 mt-2 bg-gray-50">
               {selectedInvoice.books?.length > 0 ? (
@@ -170,7 +199,6 @@ const AdminInvoicesPage = () => {
                 <p>No books found.</p>
               )}
             </ul>
-
             <div className="flex justify-between mt-4">
               <button
                 onClick={() => setSelectedInvoice(null)}
