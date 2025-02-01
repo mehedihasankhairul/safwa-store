@@ -2,11 +2,15 @@ import Banner from "./components/Banner";
 import NavBar from "./components/NavBar";
 import ProductCategorySection from "./components/ProductCategorySection";
 import Footer from "./components/Footer";
+import StickyCart from "./components/StickyCart";
 
 export default function Home() {
   return (
     <>
       <NavBar />
+      <div className="fixed top-1/2 right-0 transform translate-y-1/2 z-50">
+        <StickyCart />
+      </div>
       <div className="container mx-auto text-center">
         <Banner />
         <ProductCategorySection

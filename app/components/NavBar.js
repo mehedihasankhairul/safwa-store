@@ -155,7 +155,7 @@ const Navbar = () => {
           />
 
           <div className="relative">
-            <button onClick={() => setIsCartOpen(!isCartOpen)}>
+           <button onClick={() => setIsCartOpen(!isCartOpen)}>     
               <FaShoppingCart className="text-md" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1 rounded-full">

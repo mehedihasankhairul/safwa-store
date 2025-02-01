@@ -4,6 +4,7 @@ import Image from "next/image";
 import dummyBookCover from "../../public/assets/dummy.png";
 import Header from "./Header";
 import AddToCartButton from "./AddToCartButton";
+import StickyCart from "./StickyCart";
 
 const BookDetails = ({ book }) => {
   const [quantity, setQuantity] = useState(1);
@@ -18,6 +19,10 @@ const BookDetails = ({ book }) => {
 
   return (
     <>
+      <div className="fixed top-1/2 right-0 transform translate-y-1/2 z-50">
+       
+        <StickyCart />
+      </div>
       <Header title={book.title} />
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">

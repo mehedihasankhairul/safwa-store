@@ -18,10 +18,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="">
         {children}
-        <div style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: "1000"}}>
-          {/* StickyCart Component */}
+        {/* <div style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: "1000"}}>
+     
           <StickyCart />
-        </div>
+        </div> */}
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import useCartStore from "../../store/cartStore";
 
 const StickyCart = () => {
@@ -19,9 +19,11 @@ const StickyCart = () => {
 
 
   return (
+  <>
     <div
       className=" bg-red-700 text-white w-20 h-22 flex flex-col text-center items-center justify-center rounded-md "
       style={{ zIndex: 1000 }}
+       
     >
       <div className="text-md font-bold bg-white text-gray-700 rounded-full h-6 w-6 flex items-center justify-center mt-2">
         <span >
@@ -30,7 +32,12 @@ const StickyCart = () => {
       </div>
       <div className="text-sm">item(s)</div>
       <div className="text-sm text-gray-700 text-center bg-white h-22 w-20 border border-red-600 rounded-b-md font-bold mt-2">৳ {totalPrice.toFixed(2)}</div>
+   
     </div>
+
+
+    
+  </>
   );
 };
 

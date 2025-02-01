@@ -14,6 +14,10 @@ const Header = () => (
       <a href="#">Categories</a>
       <a href="#">Best Sellers</a>
       <a href="#">Contact</a>
+      <Link href="/invoices" className="text-blue-500 hover:underline">
+        My Invoices
+      </Link>
+
     </nav>
     <div className="flex items-center gap-4">
       <input
