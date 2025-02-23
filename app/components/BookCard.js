@@ -23,7 +23,7 @@ const BookCard = ({ book }) => {
         {/* Book Cover */}
         <div className="w-full h-[220px] flex items-center justify-center relative overflow-hidden">
           <Image
-            src={book.image || dummy}
+            src={ book.coverImgs[0]  || dummy}
             alt={book.title}
             fill
             className="object-cover rounded-md pt-2"

@@ -80,20 +80,24 @@ const useBookStore = create((set, get) => ({
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/books/${bookId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${authToken}` },
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`,
+        },
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to delete book");
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to delete book");
+      }
 
-      set((state) => ({
-        books: state.books.filter((book) => book._id !== bookId),
-      }));
-
-      return { success: true, message: "Book deleted successfully" }; // ✅ Return success message
+      if (response.ok) {
+        set((state) => ({
+          books: state.books.filter((book) => book._id !== bookId),
+        }));
+        alert("Book deleted successfully");
+      }
     } catch (error) {
-      console.error("Failed to delete book:", error);
-      return { success: false, message: error.message || "Failed to delete book" }; // ✅ Return error message
+      console.error("Error deleting book:", error);
     }
   },
 }));

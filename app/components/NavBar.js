@@ -9,6 +9,7 @@ import { getAllBooks } from "@/utils/api"; // Import API function for search
 import { FaShoppingCart, FaTimes } from "react-icons/fa";
 import useCartStore from "../../store/cartStore"; // Import Zustand store
 import CartPage from "./CartPage"; // Import the CartPage component
+import Link from "next/link";
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -131,6 +132,7 @@ const Navbar = () => {
           )}
         </div>
 
+
         <div className="flex items-center space-x-4 bg-white text-red-900 px-4 py-2 rounded-sm">
           {user ? (
             <>
@@ -147,6 +149,10 @@ const Navbar = () => {
               Login / Register
             </button>
           )}
+         {/* admin dashboard  */}
+          <Link href="/dashboard" className="text-book-gold hover:text-white">
+            ড্যাশবোর্ড
+          </Link>
 
           <AuthModal
             isOpen={isModalOpen}

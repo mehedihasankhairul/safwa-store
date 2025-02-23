@@ -1,13 +1,36 @@
 "use client";
 import { useEffect, useState } from "react";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  CircularProgress,
+  Dialog,
+  Avatar,
+  DialogTitle,
+  DialogActions,
+} from "@mui/material";
+import { Add, Edit, Delete } from "@mui/icons-material";
 import useBookStore from "@/store/bookStore";
 import AddBookModal from "../../components/AddBookModal";
+import Image from "next/image";
+import dummyCover from "../../../public/assets/dummy.png";
 
 const AdminBooksPage = () => {
-  const { books, fetchBooks, deleteBook } = useBookStore();
+  const { books, fetchBooks, deleteBook, updateBook } = useBookStore();
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingBook, setEditingBook] = useState(null); // Stores book being edited
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // Stores book being deleted
 
   useEffect(() => {
     const loadBooks = async () => {
@@ -17,83 +40,139 @@ const AdminBooksPage = () => {
     loadBooks();
   }, []);
 
+  // ✅ Handle Delete Confirmation
+  const handleDeleteBook = async () => {
+    if (deleteConfirm) {
+      await deleteBook(deleteConfirm);
+      setDeleteConfirm(null);
+    }
+  };
+
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Admin Books</h1>
+    <Card sx={{ padding: 3, margin: 3 }}>
+      <CardContent>
+        <Typography variant="h5" fontWeight="bold" textAlign="center" mb={3}>
+          Admin Books Management
+        </Typography>
 
-      {/* ✅ Add Book Button */}
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+        {/* ✅ Add Book Button */}
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          color="primary"
+          onClick={() => {
+            setEditingBook(null); // Reset editing
+            setShowModal(true);
+          }}
+          sx={{ marginBottom: 2 }}
         >
-          <FaPlus className="mr-2" /> Add Book
-        </button>
-      </div>
+          Add Book
+        </Button>
 
-      {/* ✅ Responsive Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse bg-white shadow-lg rounded-lg">
-          <thead>
-            <tr className="bg-gray-100 border-b">
-              <th className="p-3 text-left">Cover</th>
-              <th className="p-3 text-left">Title</th>
-              <th className="p-3 text-left">Author</th>
-              <th className="p-3 text-left hidden md:table-cell">Category</th>
-              <th className="p-3 text-left">Printed Price</th>
-              <th className="p-3 text-left">Discount</th>
-              <th className="p-3 text-left">Sale Price</th>
-              <th className="p-3 text-left hidden md:table-cell">Stock</th>
-              <th className="p-3 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="9" className="text-center p-3">Loading books...</td>
-              </tr>
-            ) : books.length === 0 ? (
-              <tr>
-                <td colSpan="9" className="text-center p-3">No books found.</td>
-              </tr>
-            ) : (
-              books.map((book, index) => (
-                <tr key={book._id || index} className="border-b hover:bg-gray-50 transition">
-                  <td className="p-3">
-                    <img
-                      src={book.coverImg || "/default-cover.png"}
-                      alt={book.title}
-                      className="w-12 h-16 object-cover rounded-md"
-                    />
-                  </td>
-                  <td className="p-3">{book.title}</td>
-                  <td className="p-3">{book.author}</td>
-                  <td className="p-3 hidden md:table-cell">{book.category}</td>
-                  <td className="p-3">৳{book.printedPrice}</td>
-                  <td className="p-3">{book.discount}%</td>
-                  <td className="p-3 text-green-600 font-bold">৳{book.salePrice}</td>
-                  <td className="p-3 hidden md:table-cell">{book.stock}</td>
-                  <td className="p-3 flex gap-2 justify-center">
-                    <button className="bg-yellow-500 text-white px-3 py-1 rounded-md flex items-center">
-                      <FaEdit className="mr-2" /> Edit
-                    </button>
-                    <button
-                      onClick={() => deleteBook(book._id)}
-                      className="bg-red-600 text-white px-3 py-1 rounded-md flex items-center"
-                    >
-                      <FaTrash className="mr-2" /> Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+        {/* ✅ Responsive Table */}
+        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
+          <Table>
+            <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+              <TableRow>
+                <TableCell>Cover</TableCell>
+                <TableCell>Title</TableCell>
+                <TableCell>Author</TableCell>
+                <TableCell align="center">Category</TableCell>
+                <TableCell align="center">Printed Price</TableCell>
+                <TableCell align="center">Discount</TableCell>
+                <TableCell align="center">Sale Price</TableCell>
+                <TableCell align="center">Stock</TableCell>
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
 
-      {/* ✅ Add Book Modal */}
-      {showModal && <AddBookModal closeModal={() => setShowModal(false)} />}
-    </div>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    <CircularProgress />
+                  </TableCell>
+                </TableRow>
+              ) : books.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    No books found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                books.map((book, index) => (
+                  <TableRow key={book._id || `book-${index}`}>
+                    <TableCell>
+                      {book.coverImgs && book.coverImgs.length > 0 ? (
+                        <Image
+                          src={book.coverImgs[0]} // Show first cover image
+                          alt={book.title}
+                          width={50}
+                          height={70}
+                          className="rounded-md shadow-md object-cover"
+                        />
+                      ) : (
+                        <Avatar
+                          src={book.coverImg ? book.coverImg : dummyCover}
+                          alt={book.title}
+                          variant="rounded"
+                          sx={{ width: 50, height: 70 }}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>{book.title}</TableCell>
+                    <TableCell>{book.author}</TableCell>
+                    <TableCell align="center">{book.category}</TableCell>
+                    <TableCell align="center">৳{book.printedPrice}</TableCell>
+                    <TableCell align="center">{book.discount}%</TableCell>
+                    <TableCell align="center" sx={{ color: "green", fontWeight: "bold" }}>
+                      ৳{book.salePrice}
+                    </TableCell>
+                    <TableCell align="center">{book.stock}</TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        color="warning"
+                        onClick={() => {
+                          setEditingBook(book);
+                          setShowModal(true);
+                        }}
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => setDeleteConfirm(book._id)}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </CardContent>
+
+      {/* ✅ Add / Edit Book Modal */}
+      <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="md" fullWidth>
+        <AddBookModal
+          closeModal={() => setShowModal(false)}
+          editingBook={editingBook} // Pass book data for editing
+        />
+      </Dialog>
+
+      {/* ✅ Delete Confirmation Dialog */}
+      <Dialog open={Boolean(deleteConfirm)} onClose={() => setDeleteConfirm(null)}>
+        <DialogTitle>Are you sure you want to delete this book?</DialogTitle>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+          <Button color="error" onClick={handleDeleteBook}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Card>
   );
 };
 

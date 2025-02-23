@@ -1,4 +1,6 @@
 @import "@fortawesome/fontawesome-free/css/all.min.css";
+/* styles/globals.css */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display&family=Open+Sans&display=swap');
 
 /* Tailwind base styles */
 @tailwind base;
