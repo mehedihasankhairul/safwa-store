@@ -2,75 +2,99 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import { FaCheckCircle } from "react-icons/fa";
+import { Card, CardContent, Typography, Button, CircularProgress } from "@mui/material";
 
 const OrderSuccessPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [orderDetails, setOrderDetails] = useState({
-    orderId: "",
-    totalAmount: 0,
-    paymentStatus: "",
-  });
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [countdown, setCountdown] = useState(10);
 
   useEffect(() => {
-    // Fetch order details from URL query params
+    // Extract order details from URL params
     const orderId = searchParams.get("orderId");
-    const totalAmount = searchParams.get("totalAmount");
+    const totalAmount = searchParams.get("totalAmount") || 0;
     const paymentStatus = searchParams.get("paymentStatus") || "Pending";
 
     if (orderId) {
       setOrderDetails({ orderId, totalAmount, paymentStatus });
     }
 
-    // Redirect to home after 10 seconds
-    const timer = setTimeout(() => {
-      router.push("/");
-    }, 10000);
+    // Countdown for redirection
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          router.push("/");
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => clearInterval(timer);
   }, [router, searchParams]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 p-6">
-      <div className="bg-white shadow-md rounded-lg p-8 text-center">
-        <FaCheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-gray-800">Order Placed Successfully!</h1>
-        <p className="text-gray-600 mt-2">
-          Thank you for your order. Your order has been successfully placed and will be processed soon.
-        </p>
+    <Suspense fallback={<CircularProgress />}>
+      <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 p-6">
+        <Card sx={{ maxWidth: 450, textAlign: "center", boxShadow: 3, p: 4 }}>
+          <CardContent>
+            <FaCheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <Typography variant="h5" fontWeight="bold" gutterBottom>
+              Order Placed Successfully! 🎉
+            </Typography>
+            <Typography variant="body1" color="textSecondary">
+              Thank you for your order. It has been successfully placed and will be processed soon.
+            </Typography>
 
-        {/* Order Details Section */}
-        <div className="bg-gray-100 p-4 rounded-lg mt-4 text-left">
-          <p className="text-gray-800 font-semibold">📦 Order ID: <span className="font-normal">{orderDetails.orderId}</span></p>
-          <p className="text-gray-800 font-semibold">💰 Total Price: <span className="font-normal">৳ {orderDetails.totalAmount}</span></p>
-          <p className="text-gray-800 font-semibold">🔄 Payment Status:
-            <span className={`font-normal ml-2 ${orderDetails.paymentStatus === "Paid" ? "text-green-600" : "text-yellow-600"}`}>
-              {orderDetails.paymentStatus}
-            </span>
-          </p>
-        </div>
+            {/* ✅ Order Details */}
+            {orderDetails ? (
+              <div className="bg-gray-100 p-4 rounded-lg mt-4 text-left">
+                <Typography variant="body2" fontWeight="bold">📦 Order ID:</Typography>
+                <Typography variant="body2" color="textSecondary">{orderDetails.orderId}</Typography>
 
-        {/* Buttons */}
-        <div className="mt-6 space-x-4">
-          <Link href="/">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
-              Back to Home
-            </button>
-          </Link>
-          <Link href="/invoice?orderId=${orderId}">
-            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
-              Download Invoice (PDF)
-            </button>
-          </Link>
-        </div>
+                <Typography variant="body2" fontWeight="bold" mt={1}>💰 Total Price:</Typography>
+                <Typography variant="body2" color="textSecondary">৳ {orderDetails.totalAmount}</Typography>
 
-        <p className="text-sm text-gray-500 mt-4">
-          Redirecting to home in <span className="font-semibold">10 seconds...</span>
-        </p>
+                <Typography variant="body2" fontWeight="bold" mt={1}>🔄 Payment Status:</Typography>
+                <Typography
+                  variant="body2"
+                  color={orderDetails.paymentStatus === "Paid" ? "success.main" : "warning.main"}
+                >
+                  {orderDetails.paymentStatus}
+                </Typography>
+              </div>
+            ) : (
+              <CircularProgress sx={{ mt: 2 }} />
+            )}
+
+            {/* ✅ Buttons */}
+            <div className="mt-6 space-x-4">
+              <Button variant="contained" color="primary" component={Link} href="/">
+                Back to Home
+              </Button>
+              <Button
+                variant="contained"
+                color="success"
+                component={Link}
+                href={`/invoice?orderId=${orderDetails?.orderId}`}
+                disabled={!orderDetails}
+              >
+                Download Invoice (PDF)
+              </Button>
+            </div>
+
+            {/* ✅ Countdown */}
+            <Typography variant="body2" color="textSecondary" mt={3}>
+              Redirecting to home in <strong>{countdown} seconds...</strong>
+            </Typography>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </Suspense>
   );
 };
 
