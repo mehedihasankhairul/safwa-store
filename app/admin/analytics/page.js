@@ -8,11 +8,14 @@ import {
   MenuItem,
   Select,
 } from "@mui/material";
-import ApexCharts from "react-apexcharts";
+import dynamic from "next/dynamic"; // ✅ Dynamic Import to Prevent SSR Issues
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+
+// ✅ Dynamically Import ApexCharts (Fixes "window is not defined" error)
+const ApexCharts = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const AnalyticsPage = () => {
   const [salesData, setSalesData] = useState([]);
@@ -29,7 +32,7 @@ const AnalyticsPage = () => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/analytics/sales?startDate=${startDate.format(
           "YYYY-MM-DD"
-        )}&endDate=${endDate.format("YYYY-MM-DD")}`
+        )}&endDate=${endDate.format("YYYY-MM-DD")}&type=${timeRange}`
       );
 
       const data = await response.json();
