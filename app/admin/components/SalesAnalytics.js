@@ -1,73 +1,87 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { Grid, Card, CardContent, Typography, CircularProgress } from "@mui/material";
+import { Grid, Card, CardContent, Typography, CircularProgress, Box } from "@mui/material";
+import useAnalyticsStore from "@/store/useAnalyticsStore";
 
 export default function SalesAnalytics() {
-  const [salesData, setSalesData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { analyticsData, fetchAllAnalytics, loading } = useAnalyticsStore();
 
-  useEffect(() => {
-    if (typeof window === "undefined") return; // ✅ Prevents execution during SSR
-
-    const fetchSales = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/analytics/sales`);
-        const data = await res.json();
-        setSalesData(data);
-      } catch (error) {
-        console.error("Failed to fetch sales data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSales();
-  }, []);
-
-  if (loading) return <CircularProgress />;
+  if (loading)
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+        <CircularProgress />
+      </Box>
+    );
 
   return (
-    <Grid container spacing={3}>
-      {/* Daily Sales */}
-      <Grid item xs={12} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6">Todays Sales</Typography>
-            <Typography variant="h4">৳ {salesData?.dailySales || 0}</Typography>
-          </CardContent>
-        </Card>
-      </Grid>
+    <Card sx={{ padding: 3, margin: 3 }}>
+      <CardContent>
+        <Typography variant="h5" fontWeight="bold" textAlign="center" mb={3}>
+          📊 Sales Analytics Overview
+        </Typography>
 
-      {/* Weekly Sales */}
-      <Grid item xs={12} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6">This Week</Typography>
-            <Typography variant="h4">৳ {salesData?.weeklySales || 0}</Typography>
-          </CardContent>
-        </Card>
-      </Grid>
+        <Grid container spacing={3}>
+          {/* ✅ Daily Sales */}
+          <Grid item xs={12} md={6} lg={3}>
+            <Card sx={{ backgroundColor: "#E3F2FD" }}>
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" color="primary">
+                  Daily Sales
+                </Typography>
+                <Typography variant="body2">Type: daily</Typography>
+                <Typography variant="h4" color="primary" fontWeight="bold">
+                  ৳ {analyticsData.daily.toLocaleString()}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-      {/* Monthly Sales */}
-      <Grid item xs={12} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6">This Month</Typography>
-            <Typography variant="h4">৳ {salesData?.monthlySales || 0}</Typography>
-          </CardContent>
-        </Card>
-      </Grid>
+          {/* ✅ Weekly Sales */}
+          <Grid item xs={12} md={6} lg={3}>
+            <Card sx={{ backgroundColor: "#FBE9E7" }}>
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" color="secondary">
+                  Weekly Sales
+                </Typography>
+                <Typography variant="body2">Type: weekly</Typography>
+                <Typography variant="h4" color="secondary" fontWeight="bold">
+                  ৳ {analyticsData.weekly.toLocaleString()}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-      {/* Yearly Sales */}
-      <Grid item xs={12} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6">This Year</Typography>
-            <Typography variant="h4">৳ {salesData?.yearlySales || 0}</Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+          {/* ✅ Monthly Sales */}
+          <Grid item xs={12} md={6} lg={3}>
+            <Card sx={{ backgroundColor: "#E8F5E9" }}>
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" color="success">
+                  Monthly Sales
+                </Typography>
+                <Typography variant="body2">Type: monthly</Typography>
+                <Typography variant="h4" color="success" fontWeight="bold">
+                  ৳ {analyticsData.monthly.toLocaleString()}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* ✅ Yearly Sales */}
+          <Grid item xs={12} md={6} lg={3}>
+            <Card sx={{ backgroundColor: "#FFF3E0" }}>
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" color="warning">
+                  Yearly Sales
+                </Typography>
+                <Typography variant="body2">Type: yearly</Typography>
+                <Typography variant="h4" color="warning" fontWeight="bold">
+                  ৳ {analyticsData.yearly.toLocaleString()}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </CardContent>
+    </Card>
   );
 }

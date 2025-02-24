@@ -18,7 +18,7 @@ export default function BookInventory() {
     };
 
     loadBooks();
-  }, []);
+  },);
 
   const handleDelete = async (id) => {
     if (confirm("Are you sure you want to delete this book?")) {
