@@ -14,6 +14,8 @@ import Link from "next/link";
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState(null);
+
+  console.log("users sates", user)
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -22,16 +24,22 @@ const Navbar = () => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const router = useRouter();
 
+
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem("token");
-    if (token) {
-      const userName = localStorage.getItem("userName");
+    const userName = localStorage.getItem("userName");
+
+    console.log(userName)
+
+    if (token && userName) {
       setUser({ name: userName });
+    
     }
+
+
   }, []);
 
-  const handleLogout = () => {
+ const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
     setUser(null);
@@ -136,7 +144,9 @@ const Navbar = () => {
         <div className="flex items-center space-x-4 bg-white text-red-900 px-4 py-2 rounded-sm">
           {user ? (
             <>
-              <span>Welcome, {user.name}</span>
+              <span className="text-bold">Welcome, {user.name}</span>
+              {console.log("log on here 143", user)}
+              <span className="text-sm">|</span>
               <button onClick={handleLogout} className="text-sm underline">
                 Logout
               </button>
@@ -150,9 +160,11 @@ const Navbar = () => {
             </button>
           )}
          {/* admin dashboard  */}
-          <Link href="/dashboard" className="text-book-gold hover:text-white">
-            ড্যাশবোর্ড
+       {user && user.name === "admin" && (
+          <Link href="/admin" passHref>
+            <button className="text-sm underline">Dashboard</button>
           </Link>
+        )}
 
           <AuthModal
             isOpen={isModalOpen}

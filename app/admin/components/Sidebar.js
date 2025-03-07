@@ -12,12 +12,25 @@ import { Dashboard, LibraryBooks, ShoppingCart, ExitToApp, Menu, BarChart } from
 import { useRouter } from "next/navigation";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Link from "next/link";
+import { FaFileInvoice, FaPaperclip } from "react-icons/fa";
 
 const drawerWidth = 240; // Sidebar width
 
 const Sidebar = ({ mobileOpen, toggleDrawer }) => {
   const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)"); // Detect mobile screens
+  const [user, setUser] = useState(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userName");
+    setUser(null);
+    if (user === null) {
+      router.push("/");
+    }
+    alert("You have been logged out.");
+
+  };
 
   const sidebarContent = (
     <List>
@@ -41,6 +54,12 @@ const Sidebar = ({ mobileOpen, toggleDrawer }) => {
         </ListItemIcon>
         <ListItemText primary="Orders" />
       </ListItem>
+      <ListItem button onClick={() => router.push("/admin/invoices")}>
+        <ListItemIcon>
+          <FaFileInvoice />
+        </ListItemIcon>
+        <ListItemText primary="Invoices" />
+      </ListItem>
 
       <ListItem disablePadding>
         <ListItemButton component={Link} href="/admin/analytics">
@@ -57,7 +76,7 @@ const Sidebar = ({ mobileOpen, toggleDrawer }) => {
         <ListItemIcon>
           <ExitToApp />
         </ListItemIcon>
-        <ListItemText primary="Logout" />
+        <ListItemText onClick={handleLogout} primary="Logout" />
       </ListItem>
     </List>
   );
@@ -82,7 +101,7 @@ const Sidebar = ({ mobileOpen, toggleDrawer }) => {
         variant="permanent"
         sx={{
           display: { xs: "none", sm: "block" }, // Hide on mobile
-          "& .MuiDrawer-paper": { width: drawerWidth },
+          "& .MuiDrawer-paper": { width: drawerWidth }
         }}
         open
       >

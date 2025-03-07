@@ -15,8 +15,10 @@ const BookCard = ({ book }) => {
       >
         {/* Discount Badge */}
         {book.discount > 0 && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+          <div className="absolute top-0 left-2 bg-red-800 text-white text-xs font-extralight px-3 py-2 rounded-full">
             {book.discount}%
+            <br />
+            ছাড়
           </div>
         )}
 

@@ -9,7 +9,7 @@ export default function SalesChart() {
   useEffect(() => {
     const fetchSales = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/analytics/sales-by-month`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/analytics/sales`);
         const data = await res.json();
         setChartData(data.sales || []);
       } catch (error) {

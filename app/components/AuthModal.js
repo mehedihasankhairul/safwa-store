@@ -1,8 +1,9 @@
 "use client";
-
 import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const AuthModal = ({ isOpen, onClose, setUser }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -14,10 +15,7 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const router = useRouter();
-
-  const BASE_URL = "https://bookshop-management-backend.onrender.com/api";
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,7 +27,7 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
     setLoading(true);
 
     try {
-      const endpoint = isLogin ? "/auth/login" : "/auth/signup";
+      const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup";
       const payload = isLogin
         ? { email: formData.email, password: formData.password }
         : {
@@ -42,26 +40,28 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
       const response = await axios.post(`${BASE_URL}${endpoint}`, payload);
 
       if (response.status === 200) {
+      
         if (isLogin) {
+
+          // Destructure token and user from response
           const { token, user } = response.data;
-
           // Save token and user details to localStorage
-          localStorage.setItem("token", response.token);
-          localStorage.setItem("user", JSON.stringify(response.user)); // Store user details
-
-
-          setUser({ name: user.name, role: user.role }); // Update user state
+          localStorage.setItem("token", token);
+          localStorage.setItem("user", JSON.stringify(user));
+          // Update parent state with logged in user details
+          setUser({ name: user.name, role: user.role });
 
           // Redirect based on user role
           if (user.role === "admin") {
-            router.push("/dashboard");
+            router.push("/admin/");
           } else {
-            router.push("/cart"); // Redirect to cart or homepage for regular users
+            router.push("/");
+            
           }
-
-          onClose(); // Close modal
+          onClose(); // Close the modal after login
         } else {
-          alert(response.data.message); // Display signup success message
+          // Registration success message (optional)
+          alert(response.data.message);
           setIsLogin(true); // Switch to login view after registration
         }
       }
@@ -83,27 +83,21 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
         >
           &times;
         </button>
-
-        {/* Tabs */}
         <div className="flex justify-center border-b pb-2">
           <button
             onClick={() => setIsLogin(true)}
-            className={`px-4 py-2 ${isLogin ? "text-red-900 border-b-2 border-red-900" : "text-gray-500"
-              }`}
+            className={`px-4 py-2 ${isLogin ? "text-red-900 border-b-2 border-red-900" : "text-gray-500"}`}
           >
             Login
           </button>
           <button
             onClick={() => setIsLogin(false)}
-            className={`px-4 py-2 ${!isLogin ? "text-red-900 border-b-2 border-red-900" : "text-gray-500"
-              }`}
+            className={`px-4 py-2 ${!isLogin ? "text-red-900 border-b-2 border-red-900" : "text-gray-500"}`}
           >
             Register
           </button>
         </div>
-
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-
         <form onSubmit={handleSubmit} className="mt-4">
           {!isLogin && (
             <div className="mb-4">
@@ -115,11 +109,10 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border rounded-lg"
-                required={!isLogin}
+                required
               />
             </div>
           )}
-
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
@@ -132,7 +125,6 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
               required
             />
           </div>
-
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
@@ -145,7 +137,6 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
               required
             />
           </div>
-
           {isLogin && (
             <div className="flex items-center justify-between mb-4">
               <label className="flex items-center text-sm">
@@ -157,11 +148,9 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
               </a>
             </div>
           )}
-
           <button
             type="submit"
-            className={`w-full ${loading ? "bg-gray-400" : "bg-red-900"
-              } text-white py-2 px-4 rounded-lg hover:bg-red-700`}
+            className={`w-full bg-red-900 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={loading}
           >
             {loading ? "Processing..." : isLogin ? "Log in" : "Register"}

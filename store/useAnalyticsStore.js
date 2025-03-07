@@ -1,46 +1,59 @@
+"use client";
 import { create } from "zustand";
 
-const useAnalyticsStore = create((set) => ({
-  analyticsData: {
-    daily: 0,
-    weekly: 0,
-    monthly: 0,
-    yearly: 0,
+const useAnalyticsStore = create((set, get) => ({
+  analytics: {
+    daily: { totalSales: 0, totalOrders: 0, growth: 0 },
+    weekly: { totalSales: 0, totalOrders: 0, growth: 0 },
+    monthly: { totalSales: 0, totalOrders: 0, growth: 0 },
+    yearly: { totalSales: 0, totalOrders: 0, growth: 0 },
+    topBooks: [],
+    topCategories: [],
   },
-  loading: false,
+  loading: true,
   error: null,
 
-  fetchAllAnalytics: async () => {
-    set({ loading: true, error: null });
-
+  fetchAnalytics: async () => {
     try {
-      const authToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-      const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
+      // ✅ Avoid fetching again if data is already present
+      if (get().analytics.daily.totalSales !== 0) {
+        console.log("Analytics data already loaded. Skipping fetch.");
+        return;
+      }
 
-      // ✅ Make sure the API calls are correct
-      const endpoints = ["daily", "weekly", "monthly", "yearly"];
+      set({ loading: true, error: null });
 
-      const responses = await Promise.all(
-        endpoints.map(async (type) => {
-          const res = await fetch(`${baseURL}/api/analytics/sales?type=${type}`, {
-            headers: { Authorization: `Bearer ${authToken}` },
-          });
+      console.log("Fetching analytics data...");
 
-          const data = await res.json();
-          return { type, sales: data.sales || 0 };
-        })
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analytics/sales`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`,
+        },
+      });
 
-      // ✅ Update Zustand state dynamically based on API response
-      const updatedAnalyticsData = responses.reduce((acc, { type, sales }) => {
-        acc[type] = sales;
-        return acc;
-      }, {});
+      if (!res.ok) {
+        throw new Error(`API Error: ${res.statusText}`);
+      }
 
-      set({ analyticsData: updatedAnalyticsData, loading: false });
+      const data = await res.json();
+      console.log("API Response:", data);
+
+      // ✅ Ensure data structure is correct before setting state
+      set({
+        analytics: {
+          daily: data.daily || { totalSales: 0, totalOrders: 0, growth: 0 },
+          weekly: data.weekly || { totalSales: 0, totalOrders: 0, growth: 0 },
+          monthly: data.monthly || { totalSales: 0, totalOrders: 0, growth: 0 },
+          yearly: data.yearly || { totalSales: 0, totalOrders: 0, growth: 0 },
+          topBooks: Array.isArray(data.topBooks) ? data.topBooks : [],
+          topCategories: Array.isArray(data.topCategories) ? data.topCategories : [],
+        },
+        loading: false,
+      });
     } catch (error) {
-      set({ error: error.message, loading: false });
-      console.error("Error fetching analytics:", error);
+      console.error("Failed to fetch analytics:", error);
+      set({ error, loading: false });
     }
   },
 }));
