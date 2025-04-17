@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -31,6 +32,7 @@ const AdminBooksPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingBook, setEditingBook] = useState(null); // Stores book being edited
   const [deleteConfirm, setDeleteConfirm] = useState(null); // Stores book being deleted
+  const [isClient, setIsClient] = useState(false); // Track if it's client-side render
 
   useEffect(() => {
     const loadBooks = async () => {
@@ -38,6 +40,9 @@ const AdminBooksPage = () => {
       setLoading(false);
     };
     loadBooks();
+
+    // Set `isClient` to true to indicate that the component is rendered on the client side
+    setIsClient(true);
   }, []);
 
   // ✅ Handle Delete Confirmation
@@ -103,21 +108,25 @@ const AdminBooksPage = () => {
                 books.map((book, index) => (
                   <TableRow key={book._id || `book-${index}`}>
                     <TableCell>
-                      {book.coverImgs && book.coverImgs.length > 0 ? (
-                        <Image
-                          src={book.coverImgs[0]} // Show first cover image
-                          alt={book.title}
-                          width={50}
-                          height={70}
-                          className="rounded-md shadow-md object-cover"
-                        />
+                      {isClient ? (
+                        book.coverImgs && book.coverImgs.length > 0 ? (
+                          <Image
+                            src={book.coverImgs[0]} // Show first cover image
+                            alt={book.title}
+                            width={50}
+                            height={70}
+                            className="rounded-md shadow-md object-cover"
+                          />
+                        ) : (
+                          <Avatar
+                            src={book.coverImg ? book.coverImg : dummyCover}
+                            alt={book.title}
+                            variant="rounded"
+                            sx={{ width: 50, height: 70 }}
+                          />
+                        )
                       ) : (
-                        <Avatar
-                          src={book.coverImg ? book.coverImg : dummyCover}
-                          alt={book.title}
-                          variant="rounded"
-                          sx={{ width: 50, height: 70 }}
-                        />
+                        <div>Loading...</div>
                       )}
                     </TableCell>
                     <TableCell>{book.title}</TableCell>

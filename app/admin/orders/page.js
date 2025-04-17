@@ -9,7 +9,7 @@ const AdminOrdersPage = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/orders`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders`, {
         method: "GET",
         headers: { Authorization: `Bearer ${authToken}` },
       });
@@ -29,7 +29,7 @@ const AdminOrdersPage = () => {
 
   const updateOrderStatus = async (id, status) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/orders/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -46,7 +46,7 @@ const AdminOrdersPage = () => {
   const deleteOrder = async (id) => {
     if (!confirm("Are you sure you want to delete this order?")) return;
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/orders/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${authToken}` },
       });

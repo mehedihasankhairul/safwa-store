@@ -6,19 +6,17 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  ListItemButton,
+  ListItemButton,  // Use ListItemButton for clickable items
 } from "@mui/material";
 import { Dashboard, LibraryBooks, ShoppingCart, ExitToApp, Menu, BarChart } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import Link from "next/link";
-import { FaFileInvoice, FaPaperclip } from "react-icons/fa";
+import { FaFileInvoice } from "react-icons/fa";
 
 const drawerWidth = 240; // Sidebar width
 
 const Sidebar = ({ mobileOpen, toggleDrawer }) => {
   const router = useRouter();
-  const isMobile = useMediaQuery("(max-width: 768px)"); // Detect mobile screens
   const [user, setUser] = useState(null);
 
   const handleLogout = () => {
@@ -29,37 +27,37 @@ const Sidebar = ({ mobileOpen, toggleDrawer }) => {
       router.push("/");
     }
     alert("You have been logged out.");
-
   };
 
   const sidebarContent = (
     <List>
-      <ListItem button onClick={() => router.push("/admin")}>
+      <ListItemButton onClick={() => router.push("/admin")}>
         <ListItemIcon>
           <Dashboard />
         </ListItemIcon>
         <ListItemText primary="Dashboard" />
-      </ListItem>
+      </ListItemButton>
 
-      <ListItem button onClick={() => router.push("/admin/books")}>
+      <ListItemButton onClick={() => router.push("/admin/books")}>
         <ListItemIcon>
           <LibraryBooks />
         </ListItemIcon>
         <ListItemText primary="Books Inventory" />
-      </ListItem>
+      </ListItemButton>
 
-      <ListItem button onClick={() => router.push("/admin/orders")}>
+      <ListItemButton onClick={() => router.push("/admin/orders")}>
         <ListItemIcon>
           <ShoppingCart />
         </ListItemIcon>
         <ListItemText primary="Orders" />
-      </ListItem>
-      <ListItem button onClick={() => router.push("/admin/invoices")}>
+      </ListItemButton>
+
+      <ListItemButton onClick={() => router.push("/admin/invoices")}>
         <ListItemIcon>
           <FaFileInvoice />
         </ListItemIcon>
         <ListItemText primary="Invoices" />
-      </ListItem>
+      </ListItemButton>
 
       <ListItem disablePadding>
         <ListItemButton component={Link} href="/admin/analytics">
@@ -72,12 +70,12 @@ const Sidebar = ({ mobileOpen, toggleDrawer }) => {
 
       <Divider />
 
-      <ListItem button onClick={() => console.log("Logout function here")}>
+      <ListItemButton onClick={handleLogout}>
         <ListItemIcon>
           <ExitToApp />
         </ListItemIcon>
-        <ListItemText onClick={handleLogout} primary="Logout" />
-      </ListItem>
+        <ListItemText primary="Logout" />
+      </ListItemButton>
     </List>
   );
 

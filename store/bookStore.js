@@ -8,7 +8,7 @@ const useBookStore = create((set, get) => ({
   // ✅ Fetch All Books
   fetchBooks: async (page = 1) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/books?page=${page}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/books?page=${page}`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.message || "Failed to fetch books");
@@ -31,7 +31,7 @@ const useBookStore = create((set, get) => ({
       const formData = new FormData();
       Object.keys(bookData).forEach((key) => formData.append(key, bookData[key]));
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/books`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/books`, {
         method: "POST",
         headers: { Authorization: `Bearer ${authToken}` },
         body: formData,
@@ -55,7 +55,7 @@ const useBookStore = create((set, get) => ({
       const formData = new FormData();
       Object.keys(updatedData).forEach((key) => formData.append(key, updatedData[key]));
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/books/${bookId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/books/${bookId}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${authToken}` },
         body: formData,
@@ -78,7 +78,7 @@ const useBookStore = create((set, get) => ({
   // ✅ Delete Book (Admin Only)
   deleteBook: async (bookId, authToken) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/books/${bookId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/books/${bookId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`,

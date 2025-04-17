@@ -3,42 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircularProgress } from "@mui/material";
+// import {useAuthStore} from "../store/useAuthStore"; // Zustand auth store import
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { login, loading, error: storeError } = useAuthStore((state) => state); // Zustand store
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    setError(""); // Reset error before attempting login
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      console.log(data);
-      if (!res.ok) {
-        setError(data.message || "Login failed");
-        setLoading(false);
+      const { success, error } = await login(email, password); // Use Zustand login method
+      if (!success) {
+        setError(error || "Login failed");
         return;
       }
-      // Save token (you can choose localStorage or cookies)
-      localStorage.setItem("authToken", data.token);
-      // Redirect to dashboard (or desired page)
-
-      console.log("Login successful", data);
-      router.push("/admin");
+      router.push("/admin"); // Redirect to admin dashboard after successful login
     } catch (err) {
       setError("An error occurred");
-      console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

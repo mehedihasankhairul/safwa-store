@@ -1,5 +1,5 @@
 // const BASE_URL = "https://bookshop-management-backend.onrender.com/api";
-const BASE_URL = "http://localhost:8000/api";
+const BASE_URL = "https://api-safwa-store.vercel.app/api";
 
 // Fetch all books for the "সকল বই" section
 export const getAllBooksForAllSection = async () => {

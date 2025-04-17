@@ -27,7 +27,7 @@ const AuthModal = ({ isOpen, onClose, setUser }) => {
     setLoading(true);
 
     try {
-      const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup";
+      const endpoint = isLogin ? "/auth/login" : "/auth/signup";
       const payload = isLogin
         ? { email: formData.email, password: formData.password }
         : {
