@@ -5,15 +5,22 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser && storedUser !== 'undefined') {
-      try {
-        setUser(JSON.parse(storedUser)); // Update user state from localStorage
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('user'); // Remove invalid data
+    // Set hydration flag first
+    setIsHydrated(true);
+    
+    // Then check localStorage
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser && storedUser !== 'undefined') {
+        try {
+          setUser(JSON.parse(storedUser)); // Update user state from localStorage
+        } catch (error) {
+          console.error('Error parsing stored user:', error);
+          localStorage.removeItem('user'); // Remove invalid data
+        }
       }
     }
   }, []);

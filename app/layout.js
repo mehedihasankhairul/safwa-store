@@ -16,11 +16,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="">
-        {children}
-        {/* <div style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: "1000"}}>
-     
-          <StickyCart />
-        </div> */}
+        <AuthProvider>
+          <CartProvider>
+            {children}
+            {/* <div style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: "1000"}}>
+         
+              <StickyCart />
+            </div> */}
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

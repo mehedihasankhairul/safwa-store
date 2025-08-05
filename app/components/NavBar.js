@@ -7,13 +7,14 @@ import AuthModal from "./AuthModal";
 import { useRouter } from "next/navigation";
 import { getAllBooks } from "@/utils/api"; // Import API function for search
 import { FaShoppingCart, FaTimes } from "react-icons/fa";
-import useCartStore from "../../store/cartStore"; // Import Zustand store
+import useCartStore, { hydrateCartStore } from "../../store/cartStore"; // Import Zustand store
 import CartPage from "./CartPage"; // Import the CartPage component
 import Link from "next/link";
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   console.log("users sates", user)
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,6 +27,11 @@ const Navbar = () => {
 
 
   useEffect(() => {
+    setIsMounted(true);
+    
+    // Hydrate cart store
+    hydrateCartStore();
+    
     const token = localStorage.getItem("token");
     const userName = localStorage.getItem("userName");
 
@@ -33,10 +39,7 @@ const Navbar = () => {
 
     if (token && userName) {
       setUser({ name: userName });
-    
     }
-
-
   }, []);
 
  const handleLogout = () => {
@@ -142,25 +145,28 @@ const Navbar = () => {
 
 
         <div className="flex items-center space-x-4 bg-white text-red-900 px-4 py-2 rounded-sm">
-          {user ? (
-            <>
-              <span className="text-bold">Welcome, {user.name}</span>
-              {console.log("log on here 143", user)}
-              <span className="text-sm">|</span>
-              <button onClick={handleLogout} className="text-sm underline">
-                Logout
+          {isMounted ? (
+            user ? (
+              <>
+                <span className="text-bold">Welcome, {user.name}</span>
+                <span className="text-sm">|</span>
+                <button onClick={handleLogout} className="text-sm underline">
+                  Logout
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="text-sm underline"
+              >
+                Login / Register
               </button>
-            </>
+            )
           ) : (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="text-sm underline"
-            >
-              Login / Register
-            </button>
+            <div className="text-sm">Loading...</div>
           )}
          {/* admin dashboard  */}
-       {user && user.name === "admin" && (
+       {isMounted && user && user.name === "admin" && (
           <Link href="/admin" passHref>
             <button className="text-sm underline">Dashboard</button>
           </Link>

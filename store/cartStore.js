@@ -34,10 +34,16 @@ const useCartStore = create(
     }),
     {
       name: "cart-storage", // Name of the local storage key
+      skipHydration: true, // Skip initial hydration to prevent SSR mismatch
     }
   )
 );
 
-// clear the c
+// Manual hydration function to be called on client-side
+export const hydrateCartStore = () => {
+  if (typeof window !== 'undefined') {
+    useCartStore.persist.rehydrate();
+  }
+};
 
 export default useCartStore;

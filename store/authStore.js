@@ -1,4 +1,4 @@
-import create from 'zustand';
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
 
@@ -62,7 +62,9 @@ const useAuthStore = create(
   )
 );
 
-// Call hydrate when the store is first initialized to load user and token from localStorage
-useAuthStore.getState().hydrate();
+// Only hydrate on client side to prevent SSR mismatch
+if (typeof window !== 'undefined') {
+  useAuthStore.getState().hydrate();
+}
 
 export default useAuthStore;

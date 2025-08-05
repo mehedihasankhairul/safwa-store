@@ -1,21 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import useCartStore from "../../store/cartStore";
 
 const StickyCart = () => {
+  const [isMounted, setIsMounted] = useState(false);
+  
   // Access cartItems from the store
   const cartItems = useCartStore((state) => state.cartItems);
 
-  // Calculate total items and total price
-  const totalItems = cartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Calculate total items and total price only after mounting
+  const totalItems = isMounted ? (cartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0) : 0;
 
   // Use the correct field for price (e.g., `salePrice` or `printedPrice`)
-  const totalPrice =
+  const totalPrice = isMounted ? (
     cartItems?.reduce(
       (sum, item) => sum + item.quantity * (item.salePrice || item.printedPrice || 0),
       0
-    ) || 0;
+    ) || 0
+  ) : 0;
 
 
   return (

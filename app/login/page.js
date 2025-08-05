@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircularProgress } from "@mui/material";
-// import {useAuthStore} from "../store/useAuthStore"; // Zustand auth store import
+import useAuthStore from "../../store/authStore"; // Zustand auth store import
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login, loading, error: storeError } = useAuthStore((state) => state); // Zustand store
+  const { login, loading } = useAuthStore((state) => ({ login: state.login, loading: state.loading })); // Zustand store
   const router = useRouter();
 
   const handleSubmit = async (e) => {
