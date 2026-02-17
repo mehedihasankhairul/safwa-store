@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 // Create the Cart Context
 const CartContext = createContext();
@@ -13,6 +13,33 @@ export const useCart = () => {
 // Cart Provider Component
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Handle hydration to prevent SSR/client mismatch
+  useEffect(() => {
+    setIsHydrated(true);
+    
+    // Load cart from localStorage if available
+    if (typeof window !== 'undefined') {
+      const savedCart = localStorage.getItem('cartItems');
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          setCartItems(parsedCart);
+        } catch (error) {
+          console.error('Error parsing saved cart:', error);
+          localStorage.removeItem('cartItems');
+        }
+      }
+    }
+  }, []);
+
+  // Save cart to localStorage whenever cartItems change
+  useEffect(() => {
+    if (isHydrated && typeof window !== 'undefined') {
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    }
+  }, [cartItems, isHydrated]);
 
   // Add an item to the cart
   const addToCart = (item) => {

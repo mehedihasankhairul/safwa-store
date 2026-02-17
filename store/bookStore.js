@@ -76,12 +76,13 @@ const useBookStore = create((set, get) => ({
   },
 
   // ✅ Delete Book (Admin Only)
-  deleteBook: async (bookId, authToken) => {
+  deleteBook: async (bookId) => {
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/books/${bookId}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -90,12 +91,9 @@ const useBookStore = create((set, get) => ({
         throw new Error(data.message || "Failed to delete book");
       }
 
-      if (response.ok) {
-        set((state) => ({
-          books: state.books.filter((book) => book._id !== bookId),
-        }));
-        alert("Book deleted successfully");
-      }
+      set((state) => ({
+        books: state.books.filter((book) => book._id !== bookId),
+      }));
     } catch (error) {
       console.error("Error deleting book:", error);
     }

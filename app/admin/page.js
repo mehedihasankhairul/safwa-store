@@ -1,96 +1,150 @@
 "use client";
-import { Grid, Card, CardContent, Typography, Button, Box, CircularProgress } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Grid, Card, CardContent, Typography, Box, Button, Avatar, Chip } from "@mui/material";
 import Link from "next/link";
-import HomeIcon from "@mui/icons-material/Home";
-import { AnalyticsSharp, BookSharp } from "@mui/icons-material";
-import { FaFileInvoiceDollar, FaFirstOrder } from "react-icons/fa";
-import { styled } from "@mui/system";
+import { Home, MenuBook, ShoppingCart, Receipt, BarChart, ArrowForward } from "@mui/icons-material";
+import DashboardCards from "./components/DashboardCards";
+import OrdersTable from "./components/OrdersTable";
+import TopSellingBooks from "./components/TopSellingBooks";
+import SalesChart from "./components/SalesChart";
+import useAuthStore from "../../store/authStore";
 
-// Styled Card with hover effect
-const StyledCard = styled(Card)(({ theme }) => ({
-  transition: "transform 0.2s, box-shadow 0.2s",
-  "&:hover": {
-    transform: "translateY(-5px)",
-    
-  },
-}));
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+};
+
+const quickLinks = [
+  { href: "/admin/books", label: "Books", icon: <MenuBook />, gradient: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)" },
+  { href: "/admin/orders", label: "Orders", icon: <ShoppingCart />, gradient: "linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%)" },
+  { href: "/admin/invoices", label: "Invoices", icon: <Receipt />, gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
+  { href: "/admin/analytics", label: "Analytics", icon: <BarChart />, gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
+];
 
 export default function AdminDashboard() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (token && storedUser) {
-      setUser(storedUser);
-    }
-    setLoading(false);
-  }, []);
+  const { user } = useAuthStore();
 
   return (
-    <Box sx={{ padding: 4, maxWidth: "1200px", margin: "0 auto" }}>
+    <Box sx={{ maxWidth: "1200px", margin: "0 auto" }}>
       {/* Welcome Section */}
-      <Grid container spacing={3} justifyContent="center">
-        <Grid item xs={12}>
-          <Card sx={{ backgroundColor: "#f5f5f5", borderRadius: 2 }}>
-            <CardContent sx={{ textAlign: "center" }}>
-              {loading ? (
-                <CircularProgress size={24} />
-              ) : (
-                <>
-                  <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    Welcome, {user?.name || "Admin"}!
-                  </Typography>
-                  <Link href="/">
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      startIcon={<HomeIcon />}
-                      sx={{ textTransform: "none" }}
-                      aria-label="Go to Home"
-                    >
-                      Home
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+      <Box sx={{
+        mb: 3,
+        p: { xs: 3, md: 4 },
+        borderRadius: 4,
+        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        color: "white",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        {/* Background decoration */}
+        <Box sx={{
+          position: "absolute",
+          top: -40,
+          right: -40,
+          width: 200,
+          height: 200,
+          borderRadius: "50%",
+          background: "rgba(102, 126, 234, 0.15)",
+        }} />
+        <Box sx={{
+          position: "absolute",
+          bottom: -60,
+          right: 80,
+          width: 150,
+          height: 150,
+          borderRadius: "50%",
+          background: "rgba(118, 75, 162, 0.1)",
+        }} />
 
-        {/* Navigation Cards */}
-        <Grid item xs={12}>
-          <Grid container spacing={3} justifyContent="center">
-            {[
-              { href: "/admin/books", label: "Books Inventory", icon: <BookSharp />, color: "success" },
-              { href: "/admin/orders", label: "Orders", icon: <FaFirstOrder />, color: "warning" },
-              { href: "/admin/invoices", label: "Invoices", icon: <FaFileInvoiceDollar />, color: "info" },
-              { href: "/admin/analytics", label: "Analytics", icon: <AnalyticsSharp />, color: "primary" },
-            ].map((item, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <StyledCard>
-                  <CardContent sx={{ textAlign: "center" }}>
-                    <Link href={item.href} passHref>
-                      <Button
-                        variant="contained"
-                        color={item.color}
-                        startIcon={item.icon}
-                        fullWidth
-                        sx={{ textTransform: "none", padding: "10px 0" }}
-                        aria-label={`Go to ${item.label}`}
-                      >
-                        {item.label}
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </StyledCard>
-              </Grid>
-            ))}
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 1 }}>
+          <Box>
+            <Typography sx={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", mb: 0.5, fontWeight: 500 }}>
+              {getGreeting()} 👋
+            </Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5, fontSize: { xs: "1.5rem", md: "2rem" } }}>
+              Welcome back, {user?.name?.split(" ")[0] || "Admin"}
+            </Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem" }}>
+              Here&apos;s what&apos;s happening with your store today.
+            </Typography>
+          </Box>
+
+          <Link href="/">
+            <Button
+              variant="contained"
+              startIcon={<Home />}
+              sx={{
+                textTransform: "none",
+                borderRadius: 2.5,
+                bgcolor: "rgba(255,255,255,0.1)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                px: 3,
+                "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
+                display: { xs: "none", md: "flex" }
+              }}
+            >
+              Visit Store
+            </Button>
+          </Link>
+        </Box>
+      </Box>
+
+      {/* Quick Links */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {quickLinks.map((item) => (
+          <Grid item xs={6} sm={3} key={item.label}>
+            <Link href={item.href} style={{ textDecoration: "none" }}>
+              <Card sx={{
+                borderRadius: 3,
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                "&:hover": { transform: "translateY(-4px)", boxShadow: "0 8px 24px rgba(0,0,0,0.1)" },
+                overflow: "hidden"
+              }}>
+                <Box sx={{ height: 3, background: item.gradient }} />
+                <CardContent sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 2, px: 2.5 }}>
+                  <Avatar sx={{
+                    width: 40, height: 40,
+                    background: item.gradient,
+                    "& svg": { fontSize: "1.2rem" }
+                  }}>
+                    {item.icon}
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography sx={{ fontWeight: 600, color: "#1a1a2e", fontSize: "0.9rem" }}>
+                      {item.label}
+                    </Typography>
+                  </Box>
+                  <ArrowForward sx={{ fontSize: "1rem", color: "#ccc" }} />
+                </CardContent>
+              </Card>
+            </Link>
           </Grid>
+        ))}
+      </Grid>
+
+      {/* Dashboard Stats Cards */}
+      <DashboardCards />
+
+      {/* Analytics Section */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={7}>
+          <SalesChart />
+        </Grid>
+        <Grid item xs={12} md={5}>
+          <TopSellingBooks />
         </Grid>
       </Grid>
+
+      {/* Recent Orders */}
+      <Card sx={{ borderRadius: 3, overflow: "hidden" }}>
+        <Box sx={{ height: 4, background: "linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%)" }} />
+        <CardContent sx={{ p: 3 }}>
+          <OrdersTable />
+        </CardContent>
+      </Card>
     </Box>
   );
 }

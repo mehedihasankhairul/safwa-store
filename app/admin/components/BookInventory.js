@@ -18,7 +18,7 @@ export default function BookInventory() {
     };
 
     loadBooks();
-  },);
+  }, []); // Remove fetchBooks from dependencies to prevent infinite loop
 
   const handleDelete = async (id) => {
     if (confirm("Are you sure you want to delete this book?")) {

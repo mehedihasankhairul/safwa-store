@@ -1,22 +1,23 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Grid, Card, CardContent, Typography, CircularProgress } from "@mui/material";
+import useAuthStore from "../../../store/authStore";
 
 const AnalyticsPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { token } = useAuthStore();
 
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
+        const authToken = token || localStorage.getItem("token");
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/analytics/sales`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/analytics/sales`, {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`,
-          },
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
         });
 
         if (!res.ok) {
@@ -24,7 +25,7 @@ const AnalyticsPage = () => {
         }
 
         const data = await res.json();
-        
+
         setAnalytics(data);
       } catch (error) {
         console.error("Failed to fetch analytics:", error);
@@ -35,7 +36,7 @@ const AnalyticsPage = () => {
     };
 
     fetchAnalytics();
-  }, []);
+  }, [token]);
 
   if (loading) {
     return (

@@ -1,16 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useCartStore from "@/store/cartStore";
+import useAuthStore from "@/store/authStore";
 import Image from "next/image";
 import dummy from "../../public/assets/dummy.png";
 
 
 const CheckoutPage = () => {
-  const authToken =  process.env.NEXT_PUBLIC_AUTH_TOKEN;
+  const { token, user } = useAuthStore();
   const { cartItems, clearCart } = useCartStore();
   const router = useRouter();
+
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!user || !token) {
+      alert("Please login to access checkout");
+      router.push('/');
+      return;
+    }
+  }, [user, token, router]);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -40,7 +50,9 @@ const CheckoutPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Ensure cart is not empty
+    // ✅ **Comprehensive Validation**
+
+    // 1. Validate cart is not empty
     const books = cartItems.map((item) => ({
       bookId: item._id,
       quantity: item.quantity,
@@ -51,37 +63,81 @@ const CheckoutPage = () => {
       return;
     }
 
-    // Ensure valid payment method
+    // 2. Validate required fields
+    if (!formData.fullAddress.trim()) {
+      alert("Full address is required.");
+      return;
+    }
+
+    if (!formData.phone.trim()) {
+      alert("Phone number is required.");
+      return;
+    }
+
+    // 3. Validate phone number format (basic validation)
+    const phoneRegex = /^[0-9]{10,15}$/;
+    if (!phoneRegex.test(formData.phone.replace(/[^0-9]/g, ''))) {
+      alert("Please enter a valid phone number (10-15 digits).");
+      return;
+    }
+
+    // 4. Validate email format if provided
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    // 5. Validate payment method
     const validPaymentMethod = getValidPaymentMethod(formData.paymentMethod);
     if (!validPaymentMethod) {
       alert("Invalid payment method selected.");
       return;
     }
 
-    // ✅ Prepare `orderData` to send
+    // 6. Validate transaction ID for bkash/nagad
+    if (["bkash", "nagad"].includes(formData.paymentMethod) && !formData.transactionId.trim()) {
+      alert(`Transaction ID is required for ${formData.paymentMethod.toUpperCase()} payment.`);
+      return;
+    }
+
+    // ✅ Prepare `orderData` to send - Match API structure exactly
+    // Create contactInfo object and conditionally add email only if it's not empty
+    const contactInfo = {
+      phone: formData.phone,
+    };
+
+    // Only add email if it's provided and not empty
+    if (formData.email && formData.email.trim() !== "") {
+      contactInfo.email = formData.email.trim();
+    }
+
+    // Create payment object - only include transactionId if it's provided
+    const payment = {
+      method: getValidPaymentMethod(formData.paymentMethod),
+      status: "pending",
+    };
+
+    // Only add transactionId if it's provided for bkash/nagad
+    if (["bkash", "nagad"].includes(formData.paymentMethod) && formData.transactionId.trim()) {
+      payment.transactionId = formData.transactionId.trim();
+    }
+
     const orderData = {
       books,
-      fullAddress: formData.fullAddress,
-      contactInfo: {
-        phone: formData.phone,
-        email: formData.email,
-      },
-      payment: {
-        method: getValidPaymentMethod(formData.paymentMethod), // ✅ Correct value
-        transactionId: formData.transactionId || "",
-        status: formData.paymentMethod === "cod" ? "Pending" : "Paid",
-      },
-      notes: formData.notes,
+      fullAddress: formData.fullAddress, // API expects this field name
+      contactInfo,
+      payment,
+      notes: formData.notes || "", // Ensure notes is always a string
     };
 
     console.log("Sending Order Data:", JSON.stringify(orderData, null, 2)); // Debugging output
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/orders`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(orderData),
       });
@@ -100,7 +156,32 @@ const CheckoutPage = () => {
       clearCart();
     } catch (error) {
       console.error("Order submission failed:", error);
-      alert(`Order failed: ${error.message}`);
+
+      // Better error handling based on error type
+      let errorMessage = "Order submission failed. Please try again.";
+
+      if (error.message.includes("abortTransaction")) {
+        errorMessage = "Order processing error occurred. Your order might have been created. Please check your order history or contact support.";
+      } else if (error.message.includes("Invalid token") || error.message.includes("Token expired")) {
+        errorMessage = "Your session has expired. Please login again.";
+        // Redirect to login or home
+        router.push('/');
+        return;
+      } else if (error.message.includes("400")) {
+        // Parse validation errors if available
+        try {
+          const errorData = JSON.parse(error.message.split(': ')[1]);
+          if (errorData.errors && errorData.errors.length > 0) {
+            errorMessage = `Validation Error: ${errorData.errors[0].msg}`;
+          }
+        } catch (parseError) {
+          errorMessage = "Invalid data provided. Please check your input.";
+        }
+      } else if (error.message.includes("500")) {
+        errorMessage = "Server error occurred. Please try again later or contact support.";
+      }
+
+      alert(errorMessage);
     }
   };
 

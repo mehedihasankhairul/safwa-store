@@ -25,9 +25,10 @@ const BookCard = ({ book }) => {
         {/* Book Cover */}
         <div className="w-full h-[220px] flex items-center justify-center relative overflow-hidden">
           <Image
-            src={ book.coverImgs[0]  || dummy}
+            src={book.coverImgs[0] || dummy}
             alt={book.title}
             fill
+            sizes="(max-width: 220px) 100vw, 220px"
             className="object-cover rounded-md pt-2"
             style={{ objectFit: "contain" }}
           />
@@ -41,7 +42,7 @@ const BookCard = ({ book }) => {
           </button>
         </div>
         {/* Add to Cart Button */}
-       
+
 
         {/* Book Details */}
         <div className="mt-4 flex flex-col flex-grow justify-between px-4 pb-4 w-full">
@@ -65,7 +66,7 @@ const BookCard = ({ book }) => {
           </div>
         </div>
 
-       
+
       </div>
     </Link>
   );

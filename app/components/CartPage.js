@@ -41,6 +41,7 @@ const CartPage = () => {
                     src={item.image || dummyImage}
                     alt={item.title}
                     fill
+                    sizes="64px"
                     className="object-cover rounded-lg"
                   />
                 </div>
@@ -53,7 +54,7 @@ const CartPage = () => {
 
               {/* Quantity Controls */}
               <div className="flex flex-col items-center">
-                
+
                 <button
                   onClick={() => updateQuantity(item._id, item.quantity + 1)}
                   className="px-2 py-1 bg-red-600 hover:bg-red-700 text-sm rounded"

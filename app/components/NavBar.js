@@ -3,20 +3,26 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import logo from "../../public/assets/logo.png";
 import defaultImg from "../../public/assets/dummy.png";
-import AuthModal from "./AuthModal";
+import UserLoginModal from "./UserLoginModal";
+import UserRegisterModal from "./UserRegisterModal";
 import { useRouter } from "next/navigation";
 import { getAllBooks } from "@/utils/api"; // Import API function for search
 import { FaShoppingCart, FaTimes } from "react-icons/fa";
 import useCartStore, { hydrateCartStore } from "../../store/cartStore"; // Import Zustand store
+import useAuthStore from "../../store/authStore"; // Import Auth store
 import CartPage from "./CartPage"; // Import the CartPage component
+import UserDropdown from "./UserDropdown";
 import Link from "next/link";
 
 const Navbar = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  console.log("users sates", user)
+  // Use Zustand auth store
+  const { user, isHydrated, logout } = useAuthStore();
+
+  console.log("user state from auth store:", user);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -28,24 +34,13 @@ const Navbar = () => {
 
   useEffect(() => {
     setIsMounted(true);
-    
+
     // Hydrate cart store
     hydrateCartStore();
-    
-    const token = localStorage.getItem("token");
-    const userName = localStorage.getItem("userName");
-
-    console.log(userName)
-
-    if (token && userName) {
-      setUser({ name: userName });
-    }
   }, []);
 
- const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userName");
-    setUser(null);
+  const handleLogout = () => {
+    logout(); // Use auth store logout
     alert("You have been logged out.");
   };
 
@@ -144,42 +139,35 @@ const Navbar = () => {
         </div>
 
 
-        <div className="flex items-center space-x-4 bg-white text-red-900 px-4 py-2 rounded-sm">
-          {isMounted ? (
-            user ? (
-              <>
-                <span className="text-bold">Welcome, {user.name}</span>
-                <span className="text-sm">|</span>
-                <button onClick={handleLogout} className="text-sm underline">
-                  Logout
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="text-sm underline"
-              >
-                Login / Register
-              </button>
-            )
-          ) : (
-            <div className="text-sm">Loading...</div>
-          )}
-         {/* admin dashboard  */}
-       {isMounted && user && user.name === "admin" && (
-          <Link href="/admin" passHref>
-            <button className="text-sm underline">Dashboard</button>
-          </Link>
-        )}
+        <div className="flex items-center space-x-3">
+          {/* User Dropdown */}
+          <UserDropdown
+            onLoginClick={() => setIsLoginModalOpen(true)}
+            variant="dark"
+          />
 
-          <AuthModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            setUser={setUser}
+          {/* User Login Modal */}
+          <UserLoginModal
+            isOpen={isLoginModalOpen}
+            onClose={() => setIsLoginModalOpen(false)}
+            onSwitchToRegister={() => {
+              setIsLoginModalOpen(false);
+              setIsRegisterModalOpen(true);
+            }}
+          />
+
+          {/* User Register Modal */}
+          <UserRegisterModal
+            isOpen={isRegisterModalOpen}
+            onClose={() => setIsRegisterModalOpen(false)}
+            onSwitchToLogin={() => {
+              setIsRegisterModalOpen(false);
+              setIsLoginModalOpen(true);
+            }}
           />
 
           <div className="relative">
-           <button onClick={() => setIsCartOpen(!isCartOpen)}>     
+            <button onClick={() => setIsCartOpen(!isCartOpen)}>
               <FaShoppingCart className="text-md" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1 rounded-full">
@@ -187,7 +175,7 @@ const Navbar = () => {
                 </span>
               )}
             </button>
-           
+
           </div>
         </div>
       </div>
@@ -200,8 +188,8 @@ const Navbar = () => {
           onClick={() => setIsCartOpen(false)}
           className="absolute top-4 right-4 text-gray-600 hover:text-red-600"
         >
-        <FaTimes className="text-xl" />
-      
+          <FaTimes className="text-xl" />
+
         </button>
 
         {/* Cart Content */}

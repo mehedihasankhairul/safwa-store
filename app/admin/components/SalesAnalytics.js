@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Grid, Card, CardContent, Typography, CircularProgress, Box } from "@mui/material";
+import useAuthStore from "../../../store/authStore";
 
 // ✅ Helper Function to Format Numbers
 const formatNumber = (num) => (typeof num === "number" ? num.toLocaleString() : "0");
@@ -17,17 +18,17 @@ export default function SalesAnalytics() {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { token } = useAuthStore();
 
   // ✅ Fetch Analytics Data from API
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/analytics/sales`, {
+        const authToken = token || localStorage.getItem("token");
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/analytics/sales`, {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`,
-          },
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
         });
 
         if (!response.ok) {
@@ -46,7 +47,7 @@ export default function SalesAnalytics() {
     };
 
     fetchAnalytics();
-  }, []);
+  }, [token]);
 
   // ✅ Loading State
   if (loading || !analyticsData) {

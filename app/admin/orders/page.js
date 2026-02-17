@@ -1,34 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { FaCheckCircle, FaTimesCircle, FaEye, FaTrash, FaSync } from "react-icons/fa";
+import { useEffect, useState, useMemo } from "react";
+import {
+  Container, Typography, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Paper, Button, Box, Chip, CircularProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip,
+  TextField, InputAdornment, MenuItem, Select, FormControl, Avatar, Divider
+} from "@mui/material";
+import {
+  CheckCircle, Cancel, Visibility, Delete, Refresh,
+  Search, FilterList, ShoppingBag, AccessTime, LocalShipping,
+  Phone, Email, LocationOn, Payment, ContentCopy, ReceiptLong
+} from "@mui/icons-material";
+import useAuthStore from "../../../store/authStore";
 
 const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
-  const authToken = process.env.NEXT_PUBLIC_AUTH_TOKEN;
+  const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const { token } = useAuthStore();
+
+  const getToken = () => token || localStorage.getItem("token");
 
   const fetchOrders = async () => {
     try {
+      const authToken = getToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${authToken}` },
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
       });
-
       if (!response.ok) throw new Error(`Error: ${await response.text()}`);
-
       const data = await response.json();
-      setOrders(data.orders);
+      setOrders(data.orders || []);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
   const updateOrderStatus = async (id, status) => {
     try {
+      const authToken = getToken();
       await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders/${id}`, {
         method: "PUT",
         headers: {
@@ -46,6 +60,7 @@ const AdminOrdersPage = () => {
   const deleteOrder = async (id) => {
     if (!confirm("Are you sure you want to delete this order?")) return;
     try {
+      const authToken = getToken();
       await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${authToken}` },
@@ -56,42 +71,661 @@ const AdminOrdersPage = () => {
     }
   };
 
+  const viewOrderDetails = (order) => {
+    setSelectedOrder(order);
+    setOpenDialog(true);
+  };
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      setLoading(true);
+      await fetchOrders();
+      setLoading(false);
+    };
+    loadOrders();
+  }, [token]);
+
+  // Filter & Search
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const matchesStatus = statusFilter === "All" || order.status === statusFilter;
+      const matchesSearch =
+        searchQuery === "" ||
+        order._id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (order.user?.fullName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (order.contactInfo?.phone || "").includes(searchQuery) ||
+        (order.contactInfo?.email || "").toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesStatus && matchesSearch;
+    });
+  }, [orders, statusFilter, searchQuery]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const pending = orders.filter(o => o.status === "Pending").length;
+    const completed = orders.filter(o => o.status === "Completed").length;
+    const cancelled = orders.filter(o => o.status === "Cancelled").length;
+    const processing = orders.filter(o => o.status === "Processing").length;
+    const totalRevenue = orders
+      .filter(o => o.status !== "Cancelled")
+      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    return { pending, completed, cancelled, processing, totalRevenue, total: orders.length };
+  }, [orders]);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Completed": return "success";
+      case "Pending": return "warning";
+      case "Processing": return "info";
+      case "Cancelled": return "error";
+      default: return "default";
+    }
+  };
+
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case "Completed": return { bg: "#e8f5e9", color: "#2e7d32", border: "#a5d6a7" };
+      case "Pending": return { bg: "#fff3e0", color: "#e65100", border: "#ffcc80" };
+      case "Processing": return { bg: "#e3f2fd", color: "#1565c0", border: "#90caf9" };
+      case "Cancelled": return { bg: "#fbe9e7", color: "#c62828", border: "#ef9a9a" };
+      default: return { bg: "#f5f5f5", color: "#616161", border: "#e0e0e0" };
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  };
+
+  const formatFullDateTime = (dateStr) => {
+    if (!dateStr) return "N/A";
+    const d = new Date(dateStr);
+    return d.toLocaleString("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true
+    });
+  };
+
+  const getTimeAgo = (dateStr) => {
+    if (!dateStr) return "";
+    const now = new Date();
+    const d = new Date(dateStr);
+    const diffMs = now - d;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return "";
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
+        <CircularProgress sx={{ color: "#667eea" }} />
+      </Box>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Admin Orders</h1>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse bg-white shadow-lg rounded-lg">
-          <thead>
-            <tr className="bg-gray-100 border-b">
-              <th className="p-3 text-left">Order ID</th>
-              <th className="p-3 text-left">Total Amount</th>
-              <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order._id} className="border-b hover:bg-gray-50">
-                <td className="p-3">{order._id}</td>
-                <td className="p-3">৳{order.totalAmount}</td>
-                <td className={`p-3 font-semibold ${order.status === "Completed" ? " text-green-700" : " text-yellow-700 "} rounded-md px-2`}>{order.status}</td>
-                <td className="p-3 text-center flex gap-2 justify-center">
-                  <button onClick={() => updateOrderStatus(order._id, "Completed")} className="bg-green-600 text-white px-3 py-1 rounded-md flex items-center">
-                    <FaCheckCircle className="mr-2" /> Approve
-                  </button>
-                  <button onClick={() => updateOrderStatus(order._id, "Cancelled")} className="bg-red-600 text-white px-3 py-1 rounded-md flex items-center">
-                    <FaTimesCircle className="mr-2" /> Cancel
-                  </button>
-                  <button onClick={() => deleteOrder(order._id)} className="bg-gray-600 text-white px-3 py-1 rounded-md flex items-center">
-                    <FaTrash className="mr-2" /> Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
+      {/* Page Header */}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
+          <Box sx={{
+            width: 42, height: 42, borderRadius: 2,
+            background: "linear-gradient(135deg, #667eea, #764ba2)",
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <ReceiptLong sx={{ color: "white", fontSize: 22 }} />
+          </Box>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: "#1a1a2e", letterSpacing: "-0.5px" }}>
+              Orders Management
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#888", mt: -0.3 }}>
+              Manage and track all customer orders
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Stats Cards */}
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(5, 1fr)" }, gap: 2, mb: 3 }}>
+        {[
+          { label: "Total Orders", value: stats.total, icon: <ShoppingBag />, gradient: "linear-gradient(135deg, #667eea, #764ba2)" },
+          { label: "Pending", value: stats.pending, icon: <AccessTime />, gradient: "linear-gradient(135deg, #f093fb, #f5576c)" },
+          { label: "Completed", value: stats.completed, icon: <CheckCircle />, gradient: "linear-gradient(135deg, #4facfe, #00f2fe)" },
+          { label: "Cancelled", value: stats.cancelled, icon: <Cancel />, gradient: "linear-gradient(135deg, #fa709a, #fee140)" },
+          { label: "Revenue", value: `৳${stats.totalRevenue.toLocaleString()}`, icon: <Payment />, gradient: "linear-gradient(135deg, #a18cd1, #fbc2eb)" },
+        ].map((stat, i) => (
+          <Paper key={i} elevation={0} sx={{
+            p: 2.5, borderRadius: 3, border: "1px solid #f0f0f5",
+            display: "flex", alignItems: "center", gap: 2,
+            transition: "all 0.2s", "&:hover": { transform: "translateY(-2px)", boxShadow: "0 8px 25px rgba(0,0,0,0.08)" }
+          }}>
+            <Box sx={{
+              width: 44, height: 44, borderRadius: 2, background: stat.gradient,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              "& svg": { color: "white", fontSize: 22 }
+            }}>
+              {stat.icon}
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: "#1a1a2e", lineHeight: 1.2 }}>
+                {stat.value}
+              </Typography>
+              <Typography variant="caption" sx={{ color: "#999", fontWeight: 500 }}>
+                {stat.label}
+              </Typography>
+            </Box>
+          </Paper>
+        ))}
+      </Box>
+
+      {/* Search & Filter Bar */}
+      <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 3, border: "1px solid #f0f0f5", display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+        <TextField
+          placeholder="Search by Order ID, customer, phone, email..."
+          size="small"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{
+            flex: 1, minWidth: 280,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2, bgcolor: "#f8f9fc",
+              "&:hover": { bgcolor: "#f0f2f8" },
+              "& fieldset": { borderColor: "#e8eaf0" }
+            }
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: "#aaa", fontSize: 20 }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <FormControl size="small" sx={{ minWidth: 150 }}>
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            displayEmpty
+            sx={{
+              borderRadius: 2, bgcolor: "#f8f9fc",
+              "& fieldset": { borderColor: "#e8eaf0" }
+            }}
+            startAdornment={
+              <InputAdornment position="start">
+                <FilterList sx={{ color: "#aaa", fontSize: 18 }} />
+              </InputAdornment>
+            }
+          >
+            <MenuItem value="All">All Status</MenuItem>
+            <MenuItem value="Pending">Pending</MenuItem>
+            <MenuItem value="Processing">Processing</MenuItem>
+            <MenuItem value="Completed">Completed</MenuItem>
+            <MenuItem value="Cancelled">Cancelled</MenuItem>
+          </Select>
+        </FormControl>
+        <Button
+          variant="outlined"
+          startIcon={<Refresh />}
+          onClick={() => { setLoading(true); fetchOrders().then(() => setLoading(false)); }}
+          sx={{
+            borderRadius: 2, borderColor: "#667eea", color: "#667eea",
+            textTransform: "none", fontWeight: 600, px: 2.5,
+            "&:hover": { bgcolor: "#667eea10", borderColor: "#667eea" }
+          }}
+        >
+          Refresh
+        </Button>
+        <Chip
+          label={`${filteredOrders.length} order${filteredOrders.length !== 1 ? "s" : ""}`}
+          size="small"
+          sx={{ bgcolor: "#667eea15", color: "#667eea", fontWeight: 600 }}
+        />
+      </Paper>
+
+      {/* Orders Table */}
+      <Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid #f0f0f5", overflow: "hidden" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 420px)" }}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                {["Order ID", "Customer", "Items", "Total", "Status", "Payment", "Date & Time", "Actions"].map((header) => (
+                  <TableCell
+                    key={header}
+                    align={header === "Actions" ? "center" : "left"}
+                    sx={{
+                      fontWeight: 700, fontSize: "0.7rem", color: "#8a8fa7",
+                      textTransform: "uppercase", letterSpacing: "0.8px",
+                      bgcolor: "#fafbfd", borderBottom: "2px solid #f0f0f5", py: 1.8
+                    }}
+                  >
+                    {header}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                    <ShoppingBag sx={{ fontSize: 56, color: "#e0e0e0", mb: 1.5 }} />
+                    <Typography color="textSecondary" sx={{ fontWeight: 500 }}>No orders found</Typography>
+                    <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                      {searchQuery || statusFilter !== "All" ? "Try adjusting your filters" : "Orders will appear here"}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredOrders.map((order) => {
+                  const statusStyle = getStatusStyles(order.status);
+                  const timeAgo = getTimeAgo(order.createdAt);
+                  return (
+                    <TableRow
+                      key={order._id}
+                      hover
+                      sx={{
+                        "&:hover": { bgcolor: "#f8f9ff" },
+                        transition: "background-color 0.15s",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => viewOrderDetails(order)}
+                    >
+                      {/* Order ID */}
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                          <Typography sx={{
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: "0.8rem",
+                            fontWeight: 600, color: "#667eea",
+                            bgcolor: "#667eea10", px: 1, py: 0.3, borderRadius: 1
+                          }}>
+                            #{order._id?.slice(-8).toUpperCase()}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+
+                      {/* Customer */}
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                          <Avatar sx={{
+                            width: 32, height: 32, fontSize: "0.75rem", fontWeight: 700,
+                            background: "linear-gradient(135deg, #667eea, #764ba2)"
+                          }}>
+                            {(order.user?.fullName || order.contactInfo?.phone || "G").charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: "#1a1a2e", lineHeight: 1.3 }}>
+                              {order.user?.fullName || "Guest"}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: "#999", fontSize: "0.68rem" }}>
+                              {order.contactInfo?.phone || "N/A"}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      {/* Items */}
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: "#555" }}>
+                          {order.books?.length || 0} item{(order.books?.length || 0) !== 1 ? "s" : ""}
+                        </Typography>
+                      </TableCell>
+
+                      {/* Total */}
+                      <TableCell>
+                        <Typography sx={{ fontWeight: 700, color: "#1a1a2e", fontSize: "0.9rem" }}>
+                          ৳{order.totalAmount?.toLocaleString() || 0}
+                        </Typography>
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell>
+                        <Chip
+                          label={order.status || "Pending"}
+                          size="small"
+                          sx={{
+                            fontWeight: 600, fontSize: "0.7rem",
+                            bgcolor: statusStyle.bg, color: statusStyle.color,
+                            border: `1px solid ${statusStyle.border}`,
+                            borderRadius: "6px"
+                          }}
+                        />
+                      </TableCell>
+
+                      {/* Payment */}
+                      <TableCell>
+                        <Typography variant="body2" sx={{
+                          fontWeight: 500, color: "#555", fontSize: "0.78rem",
+                          textTransform: "uppercase"
+                        }}>
+                          {order.payment?.method || "N/A"}
+                        </Typography>
+                      </TableCell>
+
+                      {/* Date & Time */}
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: "#333", fontSize: "0.8rem", lineHeight: 1.4 }}>
+                            {formatDate(order.createdAt)}
+                          </Typography>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <AccessTime sx={{ fontSize: 12, color: "#aaa" }} />
+                            <Typography variant="caption" sx={{ color: "#999", fontSize: "0.7rem" }}>
+                              {formatTime(order.createdAt)}
+                            </Typography>
+                            {timeAgo && (
+                              <Typography variant="caption" sx={{
+                                color: "#667eea", fontSize: "0.65rem", fontWeight: 600,
+                                bgcolor: "#667eea10", px: 0.7, py: 0.1, borderRadius: 0.5, ml: 0.5
+                              }}>
+                                {timeAgo}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                        <Box sx={{ display: "flex", gap: 0.3, justifyContent: "center" }}>
+                          <Tooltip title="View Details" arrow>
+                            <IconButton size="small" sx={{
+                              color: "#667eea", "&:hover": { bgcolor: "#667eea15" }
+                            }} onClick={() => viewOrderDetails(order)}>
+                              <Visibility sx={{ fontSize: 18 }} />
+                            </IconButton>
+                          </Tooltip>
+
+                          {order.status !== "Completed" && (
+                            <Tooltip title="Mark Complete" arrow>
+                              <IconButton size="small" sx={{
+                                color: "#2e7d32", "&:hover": { bgcolor: "#e8f5e9" }
+                              }} onClick={() => updateOrderStatus(order._id, "Completed")}>
+                                <CheckCircle sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
+                          {order.status !== "Cancelled" && (
+                            <Tooltip title="Cancel Order" arrow>
+                              <IconButton size="small" sx={{
+                                color: "#e65100", "&:hover": { bgcolor: "#fff3e0" }
+                              }} onClick={() => updateOrderStatus(order._id, "Cancelled")}>
+                                <Cancel sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
+                          <Tooltip title="Delete" arrow>
+                            <IconButton size="small" sx={{
+                              color: "#c62828", "&:hover": { bgcolor: "#fbe9e7" }
+                            }} onClick={() => deleteOrder(order._id)}>
+                              <Delete sx={{ fontSize: 18 }} />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+
+      {/* Order Details Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 4, overflow: "hidden" } }}
+      >
+        {selectedOrder && (
+          <>
+            {/* Dialog Header */}
+            <Box sx={{
+              background: "linear-gradient(135deg, #667eea, #764ba2)",
+              p: 3, color: "white"
+            }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ opacity: 0.8, mb: 0.3, fontWeight: 500 }}>
+                    Order Details
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: "monospace" }}>
+                      #{selectedOrder._id?.slice(-8).toUpperCase()}
+                    </Typography>
+                    <IconButton size="small" sx={{ color: "white", opacity: 0.7 }} onClick={() => copyToClipboard(selectedOrder._id)}>
+                      <ContentCopy sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Box>
+                </Box>
+                <Chip
+                  label={selectedOrder.status || "Pending"}
+                  sx={{
+                    fontWeight: 700, color: "white", fontSize: "0.8rem",
+                    bgcolor: "rgba(255,255,255,0.2)", backdropFilter: "blur(10px)"
+                  }}
+                />
+              </Box>
+            </Box>
+
+            <DialogContent sx={{ p: 3 }}>
+              {/* Timestamps */}
+              <Box sx={{
+                display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mb: 3,
+                p: 2, bgcolor: "#f8f9fc", borderRadius: 2
+              }}>
+                <Box>
+                  <Typography variant="caption" sx={{ color: "#999", fontWeight: 600, textTransform: "uppercase", fontSize: "0.65rem" }}>
+                    Created
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: "#333" }}>
+                    {formatFullDateTime(selectedOrder.createdAt)}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: "#999", fontWeight: 600, textTransform: "uppercase", fontSize: "0.65rem" }}>
+                    Last Updated
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: "#333" }}>
+                    {formatFullDateTime(selectedOrder.updatedAt)}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Customer Info */}
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: "#1a1a2e", display: "flex", alignItems: "center", gap: 0.8 }}>
+                <Avatar sx={{ width: 24, height: 24, fontSize: "0.65rem", background: "linear-gradient(135deg, #667eea, #764ba2)" }}>
+                  {(selectedOrder.user?.fullName || "G").charAt(0).toUpperCase()}
+                </Avatar>
+                Customer Information
+              </Typography>
+
+              <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1.5, bgcolor: "#f8f9fc", borderRadius: 2 }}>
+                  <LocalShipping sx={{ fontSize: 18, color: "#667eea" }} />
+                  <Box>
+                    <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem" }}>Name</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedOrder.user?.fullName || "Guest"}</Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1.5, bgcolor: "#f8f9fc", borderRadius: 2 }}>
+                  <Phone sx={{ fontSize: 18, color: "#667eea" }} />
+                  <Box>
+                    <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem" }}>Phone</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedOrder.contactInfo?.phone || "N/A"}</Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1.5, bgcolor: "#f8f9fc", borderRadius: 2 }}>
+                  <Email sx={{ fontSize: 18, color: "#667eea" }} />
+                  <Box>
+                    <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem" }}>Email</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: "0.78rem" }}>{selectedOrder.contactInfo?.email || "N/A"}</Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1.5, bgcolor: "#f8f9fc", borderRadius: 2 }}>
+                  <LocationOn sx={{ fontSize: 18, color: "#667eea" }} />
+                  <Box>
+                    <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem" }}>Address</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: "0.78rem" }}>
+                      {selectedOrder.shippingAddress?.fullAddress || "N/A"}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Payment Info */}
+              <Box sx={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                p: 2, bgcolor: "#f8f9fc", borderRadius: 2, mb: 3
+              }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Payment sx={{ fontSize: 20, color: "#667eea" }} />
+                  <Box>
+                    <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem" }}>Payment Method</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700, textTransform: "uppercase" }}>
+                      {selectedOrder.payment?.method || "N/A"}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ textAlign: "right" }}>
+                  <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem" }}>Payment Status</Typography>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 700, textTransform: "capitalize",
+                    color: selectedOrder.payment?.status === "paid" ? "#2e7d32" : "#e65100"
+                  }}>
+                    {selectedOrder.payment?.status || "pending"}
+                  </Typography>
+                </Box>
+                {selectedOrder.payment?.transactionId && (
+                  <Box sx={{ textAlign: "right" }}>
+                    <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem" }}>Transaction ID</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: "monospace" }}>
+                      {selectedOrder.payment.transactionId}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Ordered Books */}
+              {selectedOrder.books && selectedOrder.books.length > 0 && (
+                <>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: "#1a1a2e" }}>
+                    📦 Ordered Items ({selectedOrder.books.length})
+                  </Typography>
+                  <Box sx={{ border: "1px solid #f0f0f5", borderRadius: 2, overflow: "hidden", mb: 2 }}>
+                    {selectedOrder.books.map((book, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                          p: 1.5, borderBottom: index < selectedOrder.books.length - 1 ? "1px solid #f0f0f5" : "none",
+                          "&:hover": { bgcolor: "#fafbfd" }
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                          <Box sx={{
+                            width: 36, height: 36, borderRadius: 1.5, bgcolor: "#667eea10",
+                            display: "flex", alignItems: "center", justifyContent: "center"
+                          }}>
+                            <ShoppingBag sx={{ fontSize: 16, color: "#667eea" }} />
+                          </Box>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {book.bookId?.title || book.title || "Unknown Book"}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: "#999" }}>
+                              Qty: {book.quantity} × ৳{book.price}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: "#1a1a2e" }}>
+                          ৳{(book.quantity * book.price).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    ))}
+                    {/* Total */}
+                    <Box sx={{
+                      display: "flex", justifyContent: "space-between",
+                      p: 1.5, bgcolor: "#f8f9fc", borderTop: "2px solid #f0f0f5"
+                    }}>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: "#1a1a2e" }}>Total</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 800, color: "#667eea" }}>
+                        ৳{selectedOrder.totalAmount?.toLocaleString() || 0}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </>
+              )}
+
+              {/* Notes */}
+              {selectedOrder.notes && (
+                <Box sx={{ p: 2, bgcolor: "#fffef5", border: "1px solid #fff3cd", borderRadius: 2 }}>
+                  <Typography variant="caption" sx={{ color: "#856404", fontWeight: 600 }}>📝 Customer Notes</Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5, color: "#856404" }}>{selectedOrder.notes}</Typography>
+                </Box>
+              )}
+            </DialogContent>
+
+            <DialogActions sx={{ p: 2.5, borderTop: "1px solid #f0f0f5", gap: 1 }}>
+              {selectedOrder.status !== "Completed" && (
+                <Button
+                  variant="contained"
+                  startIcon={<CheckCircle />}
+                  onClick={() => { updateOrderStatus(selectedOrder._id, "Completed"); setOpenDialog(false); }}
+                  sx={{
+                    borderRadius: 2, textTransform: "none", fontWeight: 600,
+                    bgcolor: "#2e7d32", "&:hover": { bgcolor: "#1b5e20" }
+                  }}
+                >
+                  Mark Complete
+                </Button>
+              )}
+              {selectedOrder.status !== "Cancelled" && (
+                <Button
+                  variant="outlined"
+                  startIcon={<Cancel />}
+                  onClick={() => { updateOrderStatus(selectedOrder._id, "Cancelled"); setOpenDialog(false); }}
+                  sx={{
+                    borderRadius: 2, textTransform: "none", fontWeight: 600,
+                    borderColor: "#e65100", color: "#e65100",
+                    "&:hover": { bgcolor: "#fff3e0", borderColor: "#e65100" }
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button
+                onClick={() => setOpenDialog(false)}
+                sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600, color: "#888", ml: "auto" }}
+              >
+                Close
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+    </Box>
   );
 };
 

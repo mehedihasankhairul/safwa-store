@@ -1,27 +1,49 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import useCartStore from "../../store/cartStore";
+import useAuthStore from "../../store/authStore";
 
-const AddToCartButton = ({ item }) => {
+const AddToCartButton = ({ item, quantity = 1 }) => {
   const cartItems = useCartStore((state) => state.cartItems);
-  console.log("Cart items in StickyCart:", cartItems);
-
   const addToCart = useCartStore((state) => state.addToCart);
+  const { user } = useAuthStore();
+  const router = useRouter();
+
+  const handleAddToCart = () => {
+    for (let i = 0; i < quantity; i++) {
+      addToCart(item);
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (!user) {
+      alert("Please login to proceed with purchase");
+      return;
+    }
+    
+    // Add item to cart first
+    addToCart(item);
+    
+    // Then redirect to checkout
+    router.push('/checkout');
+  };
 
   return (
-    <button className="bg-green-500 text-white mt-4 px-4 py-2 rounded"
-      onClick={() => addToCart(item)}
-      style={{
-        padding: "10px",
-        backgroundColor: "green",
-        color: "white",
-        border: "none",
-        borderRadius: "5px",
-        cursor: "pointer",
-      }}
-    >
-      Add to Cart
-    </button>
+    <div className="flex gap-2 ml-4">
+      <button 
+        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+        onClick={handleAddToCart}
+      >
+        Add to cart
+      </button>
+      <button 
+        className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+        onClick={handleBuyNow}
+      >
+        Buy Now
+      </button>
+    </div>
   );
 };
 
