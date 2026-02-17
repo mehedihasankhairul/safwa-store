@@ -1,27 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CircularProgress } from "@mui/material";
 import useAuthStore from "../../store/authStore"; // Zustand auth store import
 import { useCart } from "../../context/CartContext"; // Cart context import
 
-const Login = () => {
+const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isClient, setIsClient] = useState(false);
-  
+
   // Use separate selectors to avoid selector recreation issues
   const login = useAuthStore((state) => state.login);
   const loading = useAuthStore((state) => state.loading);
   const isHydrated = useAuthStore((state) => state.isHydrated);
-  
+
   // Get cart information from CartContext
   const { cartItems, totalItems } = useCart();
-  
+
   const router = useRouter();
-  
+
   // Handle client-side hydration
   useEffect(() => {
     setIsClient(true);
@@ -39,10 +39,10 @@ const Login = () => {
         setError(error || "Login failed");
         return;
       }
-      
+
       // Determine redirect destination based on user role and context
       let destination = '/';
-      
+
       if (user && user.role === 'admin') {
         // Admin users go to admin dashboard
         destination = "/admin";
@@ -62,7 +62,7 @@ const Login = () => {
           }
         }
       }
-      
+
       router.push(destination);
     } catch (err) {
       setError("An error occurred");
@@ -153,6 +153,18 @@ const Login = () => {
         </p>
       </div>
     </div>
+  );
+};
+
+const Login = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <CircularProgress size={32} className="text-red-900" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 };
 
