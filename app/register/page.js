@@ -9,11 +9,13 @@ const Register = () => {
   const [error, setError] = useState("");
   const router = useRouter();
 
+  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://api-safwa-store.vercel.app/api";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signup`, {
+      const res = await fetch(`${BASE_URL}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),

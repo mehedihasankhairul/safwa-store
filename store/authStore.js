@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import axios from 'axios';
 
 // const BASE_URL = "https://api-safwa-store.vercel.app/";
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://api-safwa-store.vercel.app/api";
 
 const useAuthStore = create(
   persist(
@@ -24,7 +24,7 @@ const useAuthStore = create(
           if (typeof window !== 'undefined') {
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('token', token);
-            
+
             // Set cookies for middleware access
             document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 days
             document.cookie = `user=${JSON.stringify(user)}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 days
@@ -54,7 +54,7 @@ const useAuthStore = create(
         if (typeof window !== 'undefined') {
           localStorage.removeItem('user');
           localStorage.removeItem('token');
-          
+
           // Remove cookies
           document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
@@ -68,8 +68,8 @@ const useAuthStore = create(
         if (typeof window === 'undefined') {
           return {
             getItem: () => null,
-            setItem: () => {},
-            removeItem: () => {},
+            setItem: () => { },
+            removeItem: () => { },
           };
         }
         return localStorage;
