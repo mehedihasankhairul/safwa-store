@@ -1,0 +1,81 @@
+
+> bookshop-frontend@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.12
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 6.4s
+   Linting and checking validity of types ...
+
+./app/admin/books/page.js
+65:6  Warning: React Hook useEffect has a missing dependency: 'fetchBooks'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/admin/components/AddBookModal.js
+253:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/admin/components/BookInventory.js
+21:6  Warning: React Hook useEffect has a missing dependency: 'fetchBooks'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/admin/components/OrdersTable.js
+20:6  Warning: React Hook useEffect has a missing dependency: 'fetchOrders'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/admin/invoices/page.js
+121:41  Warning: React Hook useEffect has a missing dependency: 'fetchInvoices'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/admin/orders/page.js
+86:6  Warning: React Hook useEffect has a missing dependency: 'fetchOrders'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/components/AddBookModal.js
+253:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/components/AllBooksSection.js
+22:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/components/Banner.js
+53:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/18) ...
+   Generating static pages (4/18) 
+   Generating static pages (8/18) 
+user state from auth store: null
+[]
+user state from auth store: null
+   Generating static pages (13/18) 
+ ✓ Generating static pages (18/18)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    1.35 kB         201 kB
+├ ○ /_not-found                             1 kB         103 kB
+├ ○ /admin                                112 kB         307 kB
+├ ○ /admin/analytics                     1.61 kB         158 kB
+├ ○ /admin/books                         9.99 kB         228 kB
+├ ○ /admin/invoices                      7.57 kB         224 kB
+├ ○ /admin/login                          1.9 kB         157 kB
+├ ○ /admin/orders                         7.2 kB         215 kB
+├ ○ /books                               1.66 kB         172 kB
+├ ƒ /books/[id]                          4.95 kB         205 kB
+├ ○ /cart                                  701 B         103 kB
+├ ○ /checkout                            3.93 kB         141 kB
+├ ○ /contact                               129 B         102 kB
+├ ○ /invoices                             3.2 kB         111 kB
+├ ○ /login                               2.34 kB         154 kB
+├ ○ /order-success                       2.59 kB         111 kB
+├ ƒ /order/[orderId]                      156 kB         264 kB
+└ ○ /register                            1.23 kB         103 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/1255-ad409e5887c155b0.js      45.8 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  └ other shared chunks (total)          2.09 kB
+
+
+ƒ Middleware                             34.1 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

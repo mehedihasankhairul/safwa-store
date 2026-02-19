@@ -13,7 +13,7 @@ const BookList = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       setLoading(true);
-      const data = await getAllBooks(pagination);
+      const data = await getAllBooks({ page: pagination.page, limit: pagination.limit });
       if (data) {
         setBooks(data.books);
         setPagination((prev) => ({
@@ -25,7 +25,7 @@ const BookList = () => {
       setLoading(false);
     };
     fetchBooks();
-  }, [pagination.page]);
+  }, [pagination.page, pagination.limit]); // Including limit as well if it ever changes
 
   const handleNextPage = () => {
     if (pagination.page < pagination.totalPages) {

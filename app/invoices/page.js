@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { FaCheckCircle, FaTimesCircle, FaDownload, FaEye, FaSearch, FaArrowLeft } from "react-icons/fa";
 import Link from "next/link";
@@ -17,7 +17,7 @@ const InvoicesPage = () => {
   const authToken = process.env.NEXT_PUBLIC_AUTH_TOKEN;
 
   // Fetch Invoices API
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/invoices`, {
         method: "GET",
@@ -34,13 +34,13 @@ const InvoicesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [authToken]);
 
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [fetchInvoices]);
 
-console.log(invoices);
+  console.log(invoices);
   // ✅ Filter Function
   useEffect(() => {
     let updatedInvoices = invoices;

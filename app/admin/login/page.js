@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { CircularProgress } from "@mui/material";
 import useAuthStore from "../../../store/authStore";
 
@@ -10,18 +11,18 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isClient, setIsClient] = useState(false);
-  
+
   // Use separate selectors to avoid selector recreation issues
   const login = useAuthStore((state) => state.login);
   const loading = useAuthStore((state) => state.loading);
   const isHydrated = useAuthStore((state) => state.isHydrated);
-  
+
   const router = useRouter();
-  
+
   // Handle client-side hydration
   useEffect(() => {
     setIsClient(true);
-    
+
     // Check if user is already logged in as admin
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -39,14 +40,14 @@ const AdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); // Reset error before attempting login
-    
+
     try {
       const { success, error, user } = await login(email, password);
       if (!success) {
         setError(error || "Login failed");
         return;
       }
-      
+
       // Check if user is admin
       if (user && user.role === 'admin') {
         router.push("/admin");
@@ -80,9 +81,9 @@ const AdminLogin = () => {
           <h1 className="text-3xl font-bold text-red-900 mb-2">Admin Login</h1>
           <p className="text-gray-600">Enter your administrator credentials</p>
         </div>
-        
+
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -99,7 +100,7 @@ const AdminLogin = () => {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Admin Password
@@ -115,7 +116,7 @@ const AdminLogin = () => {
               required
             />
           </div>
-          
+
           <button
             type="submit"
             disabled={loading}
@@ -124,13 +125,13 @@ const AdminLogin = () => {
             {loading ? <CircularProgress size={24} color="inherit" /> : "Login as Admin"}
           </button>
         </form>
-        
+
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Not an admin?{" "}
-            <a href="/" className="text-red-900 font-medium hover:underline">
+            <Link href="/" className="text-red-900 font-medium hover:underline">
               Go to Store
-            </a>
+            </Link>
           </p>
         </div>
       </div>

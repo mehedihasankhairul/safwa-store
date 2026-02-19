@@ -5,19 +5,19 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Use App Router's navigation API
 
 const withAuth = (WrappedComponent, requiredRole = null) => {
-  return (props) => {
+  const AuthenticatedComponent = (props) => {
     const router = useRouter();
     const [isHydrated, setIsHydrated] = useState(false);
 
     useEffect(() => {
       // Set hydration flag first
       setIsHydrated(true);
-      
+
       // Only access localStorage after component mounts
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem("token");
         const userStr = localStorage.getItem("user");
-        
+
         let user = null;
         if (userStr && userStr !== 'undefined') {
           try {
@@ -34,7 +34,7 @@ const withAuth = (WrappedComponent, requiredRole = null) => {
           router.push("/"); // Redirect if user doesn't have the required role
         }
       }
-    }, [router, requiredRole]);
+    }, [router]); // requiredRole removed as per ESLint warning
 
     // Don't render until hydrated
     if (!isHydrated) {
@@ -43,6 +43,10 @@ const withAuth = (WrappedComponent, requiredRole = null) => {
 
     return <WrappedComponent {...props} />;
   };
+
+  AuthenticatedComponent.displayName = `withAuth(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
+
+  return AuthenticatedComponent;
 };
 
 export default withAuth;
