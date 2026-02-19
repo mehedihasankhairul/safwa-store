@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useCartStore from "@/store/cartStore";
 import useAuthStore from "@/store/authStore";
+import { createOrder } from "@/utils/api";
 import Image from "next/image";
 import dummy from "../../public/assets/dummy.png";
 
@@ -133,21 +134,12 @@ const CheckoutPage = () => {
     console.log("Sending Order Data:", JSON.stringify(orderData, null, 2)); // Debugging output
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(orderData),
-      });
+      const responseData = await createOrder(orderData, token);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      if (!responseData || !responseData.order) {
+        throw new Error("Order submission failed: No order returned");
       }
 
-      const responseData = await response.json();
       console.log("Parsed API Response:", responseData);
 
       // ✅ Redirect to order success page with order details

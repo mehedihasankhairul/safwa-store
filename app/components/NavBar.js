@@ -45,17 +45,17 @@ const Navbar = () => {
   };
 
   const handleSearchChange = async (e) => {
-    const query = e.target.value.trim();
+    const query = e.target.value;
     setSearchQuery(query);
 
-    if (query === "") {
+    if (query.trim() === "") {
       setSearchResults([]);
       setIsDropdownVisible(false);
       return;
     }
 
     try {
-      const response = await getAllBooks({ search: query });
+      const response = await getAllBooks({ search: query.trim() });
       setSearchResults(response.books || []);
       setIsDropdownVisible(true);
     } catch (error) {
@@ -67,13 +67,25 @@ const Navbar = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/search?query=${searchQuery}`);
+      router.push(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
       setIsDropdownVisible(false);
     }
   };
 
   return (
     <header className="bg-red-900 text-white">
+      {/* Top Navigation Bar */}
+      <div className="bg-red-950/40 border-b border-red-800/30">
+        <div className="container mx-auto px-6 py-2">
+          <nav className="flex items-center gap-6 text-xs md:text-sm font-medium">
+            <Link href="/" className="hover:text-amber-400 transition-colors">Home</Link>
+            <Link href="/books" className="hover:text-amber-400 transition-colors">Category All books</Link>
+            <Link href="/" className="hover:text-amber-400 transition-colors">Customer</Link>
+            <Link href="/" className="hover:text-amber-400 transition-colors">Research</Link>
+          </nav>
+        </div>
+      </div>
+
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center py-4 px-6 space-y-4 md:space-y-0">
         <div className="flex items-center space-x-2">
           <Image height={90} width={80} src={logo} alt="Logo" />

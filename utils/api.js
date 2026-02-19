@@ -1,5 +1,5 @@
 // const BASE_URL = "https://bookshop-management-backend.onrender.com/api";
-const BASE_URL = "https://api-safwa-store.vercel.app/api";
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://api-safwa-store.vercel.app/api";
 
 // Fetch all books for the "সকল বই" section
 export const getAllBooksForAllSection = async () => {
@@ -117,13 +117,13 @@ export const deleteBook = async (id, token) => {
 };
 
 // Create a new order
-export const createOrder = async (orderData) => {
+export const createOrder = async (orderData, token) => {
   try {
     const response = await fetch(`${BASE_URL}/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify(orderData),
     });
