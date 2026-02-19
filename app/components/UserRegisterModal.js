@@ -11,7 +11,7 @@ const UserRegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  
+
   // Use separate selectors to avoid selector recreation issues
   const register = useAuthStore((state) => state.register);
   const loading = useAuthStore((state) => state.loading);
@@ -20,32 +20,32 @@ const UserRegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
     e.preventDefault();
     setError(""); // Reset error before attempting registration
     setSuccess("");
-    
+
     // Validate password confirmation
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-    
+
     if (password.length < 6) {
       setError("Password must be at least 6 characters long");
       return;
     }
-    
+
     try {
       const { success, error, message } = await register(name, email, password, "user");
       if (!success) {
         setError(error || "Registration failed");
         return;
       }
-      
+
       setSuccess(message || "Registration successful! You can now sign in.");
       // Clear form
       setName("");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
-      
+
       // Switch to login modal after a brief delay
       setTimeout(() => {
         onSwitchToLogin();
@@ -85,10 +85,10 @@ const UserRegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
           <h2 className="text-2xl font-bold text-red-900 mb-2">Create Account</h2>
           <p className="text-gray-600">Join us to start shopping</p>
         </div>
-        
+
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {success && <p className="text-green-500 text-center mb-4">{success}</p>}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="modal-name" className="block text-sm font-medium text-gray-700">
@@ -99,13 +99,13 @@ const UserRegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="modal-name"
               name="name"
               placeholder="Enter your full name"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="modal-reg-email" className="block text-sm font-medium text-gray-700">
               Email Address
@@ -115,13 +115,13 @@ const UserRegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="modal-reg-email"
               name="email"
               placeholder="Enter your email"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="modal-reg-password" className="block text-sm font-medium text-gray-700">
               Password
@@ -131,13 +131,13 @@ const UserRegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="modal-reg-password"
               name="password"
               placeholder="Create a password"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="modal-confirm-password" className="block text-sm font-medium text-gray-700">
               Confirm Password
@@ -147,13 +147,13 @@ const UserRegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="modal-confirm-password"
               name="confirmPassword"
               placeholder="Confirm your password"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
           </div>
-          
+
           <button
             type="submit"
             disabled={loading}
@@ -162,7 +162,7 @@ const UserRegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
             {loading ? <CircularProgress size={24} color="inherit" /> : "Create Account"}
           </button>
         </form>
-        
+
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{" "}

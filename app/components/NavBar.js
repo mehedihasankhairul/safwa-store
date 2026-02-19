@@ -79,9 +79,9 @@ const Navbar = () => {
         <div className="container mx-auto px-6 py-2">
           <nav className="flex items-center gap-6 text-xs md:text-sm font-medium">
             <Link href="/" className="hover:text-amber-400 transition-colors">Home</Link>
-            <Link href="/books" className="hover:text-amber-400 transition-colors">Category All books</Link>
-            <Link href="/" className="hover:text-amber-400 transition-colors">Customer</Link>
-            <Link href="/" className="hover:text-amber-400 transition-colors">Research</Link>
+            <Link href="/books" className="hover:text-amber-400 transition-colors">All books</Link>
+            <Link href="/" className="hover:text-amber-400 transition-colors">Support</Link>
+            <Link href="/" className="hover:text-amber-400 transition-colors">Request Books</Link>
           </nav>
         </div>
       </div>

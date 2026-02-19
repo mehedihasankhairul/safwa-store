@@ -113,7 +113,7 @@ const LoginForm = () => {
               id="email"
               name="email"
               placeholder="Enter your email"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -128,7 +128,7 @@ const LoginForm = () => {
               id="password"
               name="password"
               placeholder="Enter your password"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

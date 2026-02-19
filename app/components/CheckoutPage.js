@@ -214,12 +214,12 @@ const CheckoutPage = () => {
         <div className="bg-white shadow-md p-4 rounded-lg">
           <h2 className="text-lg font-bold mb-4">Shipping Information</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} required className="w-full p-2 border rounded-md" />
-            <input type="number" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} required className="w-full p-2 border rounded-md" />
-            <input type="email" name="email" placeholder="Email (Optional)" value={formData.email} onChange={handleChange} className="w-full p-2 border rounded-md" />
+            <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} required className="w-full p-2 border rounded-md text-gray-900" />
+            <input type="number" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} required className="w-full p-2 border rounded-md text-gray-900" />
+            <input type="email" name="email" placeholder="Email (Optional)" value={formData.email} onChange={handleChange} className="w-full p-2 border rounded-md text-gray-900" />
 
             {/* Full Address Field */}
-            <textarea name="fullAddress" placeholder="Full Address" value={formData.fullAddress} onChange={handleChange} required className="w-full p-2 border rounded-md"></textarea>
+            <textarea name="fullAddress" placeholder="Full Address" value={formData.fullAddress} onChange={handleChange} required className="w-full p-2 border rounded-md text-gray-900"></textarea>
 
             {/* Payment Method */}
             {/* Payment Method */}
@@ -259,10 +259,10 @@ const CheckoutPage = () => {
 
             {/* Transaction ID (Bkash/Nagad Only) */}
             {["bkash", "nagad"].includes(formData.paymentMethod) && (
-              <input type="text" name="transactionId" placeholder="Transaction ID" required value={formData.transactionId} onChange={handleChange} className="w-full p-2 border rounded-md" />
+              <input type="text" name="transactionId" placeholder="Transaction ID" required value={formData.transactionId} onChange={handleChange} className="w-full p-2 border rounded-md text-gray-900" />
             )}
 
-            <textarea name="notes" placeholder="Additional Notes (Optional)" value={formData.notes} onChange={handleChange} className="w-full p-2 border rounded-md"></textarea>
+            <textarea name="notes" placeholder="Additional Notes (Optional)" value={formData.notes} onChange={handleChange} className="w-full p-2 border rounded-md text-gray-900"></textarea>
 
             <button type="submit" className="w-full bg-red-700 text-white py-2 rounded-md">Place Order</button>
           </form>

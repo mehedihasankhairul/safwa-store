@@ -9,25 +9,25 @@ const UserLoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  
+
   // Use separate selectors to avoid selector recreation issues
   const login = useAuthStore((state) => state.login);
   const loading = useAuthStore((state) => state.loading);
-  
+
   // Get cart information from CartContext
   const { totalItems } = useCart();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); // Reset error before attempting login
-    
+
     try {
       const { success, error, user } = await login(email, password);
       if (!success) {
         setError(error || "Login failed");
         return;
       }
-      
+
       // For regular users (non-admin), close modal and stay on current page
       if (user && user.role !== 'admin') {
         onClose();
@@ -68,9 +68,9 @@ const UserLoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
           <h2 className="text-2xl font-bold text-red-900 mb-2">Welcome Back</h2>
           <p className="text-gray-600">Sign in to your account</p>
         </div>
-        
+
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="modal-email" className="block text-sm font-medium text-gray-700">
@@ -81,13 +81,13 @@ const UserLoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
               id="modal-email"
               name="email"
               placeholder="Enter your email"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="modal-password" className="block text-sm font-medium text-gray-700">
               Password
@@ -97,13 +97,13 @@ const UserLoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
               id="modal-password"
               name="password"
               placeholder="Enter your password"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          
+
           <button
             type="submit"
             disabled={loading}
@@ -112,7 +112,7 @@ const UserLoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
             {loading ? <CircularProgress size={24} color="inherit" /> : "Sign In"}
           </button>
         </form>
-        
+
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{" "}

@@ -46,7 +46,7 @@ const Register = () => {
               id="name"
               name="name"
               placeholder="Enter your full name"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -61,7 +61,7 @@ const Register = () => {
               id="email"
               name="email"
               placeholder="Enter your email"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -76,7 +76,7 @@ const Register = () => {
               id="password"
               name="password"
               placeholder="Create a password"
-              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent"
+              className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 focus:border-transparent text-gray-900"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
