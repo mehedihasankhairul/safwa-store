@@ -28,13 +28,13 @@ const useBookStore = create((set, get) => ({
   // ✅ Add New Book (Admin Only)
   addBook: async (bookData, authToken) => {
     try {
-      const formData = new FormData();
-      Object.keys(bookData).forEach((key) => formData.append(key, bookData[key]));
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/books`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${authToken}` },
-        body: formData,
+        headers: {
+          "Authorization": `Bearer ${authToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(bookData),
       });
 
       const result = await response.json();
@@ -52,13 +52,13 @@ const useBookStore = create((set, get) => ({
   // ✅ Update Book (Admin Only)
   updateBook: async (bookId, updatedData, authToken) => {
     try {
-      const formData = new FormData();
-      Object.keys(updatedData).forEach((key) => formData.append(key, updatedData[key]));
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/books/${bookId}`, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${authToken}` },
-        body: formData,
+        headers: {
+          "Authorization": `Bearer ${authToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updatedData),
       });
 
       const result = await response.json();

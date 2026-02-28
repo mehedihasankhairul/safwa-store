@@ -24,11 +24,13 @@ const DashboardCards = () => {
         const booksRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/books`);
         const booksData = await booksRes.json();
 
-        // Fetch orders data
-        const ordersRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders`, {
+        // Fetch orders data (admin endpoint for all orders)
+        const ordersRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders/admin/orders`, {
           headers
         });
-        const ordersData = ordersRes.ok ? await ordersRes.json() : { orders: [] };
+        const ordersRaw = ordersRes.ok ? await ordersRes.json() : [];
+        // Admin endpoint returns flat array
+        const ordersData = { orders: Array.isArray(ordersRaw) ? ordersRaw : ordersRaw.orders || [] };
 
         // Calculate stats
         const totalBooks = booksData.books?.length || booksData.totalBooks || 0;

@@ -2,16 +2,14 @@
 import { useState, useEffect } from "react";
 import {
   DialogContent, DialogActions, Button, TextField, MenuItem,
-  LinearProgress, Box, Typography, IconButton, Chip
+  LinearProgress, Box, Typography, IconButton, Chip, Autocomplete
 } from "@mui/material";
 import { Close, CloudUpload, MenuBook, Add, Save } from "@mui/icons-material";
 import useBookStore from "@/store/bookStore";
 import useAuthStore from "@/store/authStore";
 
-const categories = ["Fiction", "Non-Fiction", "Education", "Islamic", "Comics"];
-
 const AddBookModal = ({ closeModal, editingBook }) => {
-  const { addBook, updateBook } = useBookStore();
+  const { addBook, updateBook, books } = useBookStore();
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [bookData, setBookData] = useState({
@@ -54,9 +52,11 @@ const AddBookModal = ({ closeModal, editingBook }) => {
     }
   }, [editingBook]);
 
+  const printedPriceNum = Number(bookData.printedPrice) || 0;
+  const discountNum = Number(bookData.discount) || 0;
   const discountedPrice = Math.round(
-    bookData.printedPrice
-      ? bookData.printedPrice - (bookData.printedPrice * (bookData.discount || 0)) / 100
+    printedPriceNum > 0
+      ? printedPriceNum - (printedPriceNum * discountNum) / 100
       : 0
   );
 
@@ -70,6 +70,12 @@ const AddBookModal = ({ closeModal, editingBook }) => {
     if (bookData.discount < 0 || bookData.discount > 100)
       newErrors.discount = "Must be 0-100%";
     if (bookData.stock < 0) newErrors.stock = "Cannot be negative";
+
+    // Check for cover images
+    if (!bookData.coverImgs || bookData.coverImgs.length === 0) {
+      newErrors.coverImgs = "At least one cover image is required";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -108,10 +114,18 @@ const AddBookModal = ({ closeModal, editingBook }) => {
     if (!validateForm()) return;
     setLoading(true);
 
+    const payload = {
+      ...bookData,
+      printedPrice: Number(bookData.printedPrice),
+      discount: Number(bookData.discount),
+      stock: Number(bookData.stock),
+      salePrice: discountedPrice,
+    };
+
     if (isEditing) {
-      await updateBook(editingBook._id, bookData, authToken);
+      await updateBook(editingBook._id, payload, authToken);
     } else {
-      await addBook(bookData, authToken);
+      await addBook(payload, authToken);
     }
     setLoading(false);
     closeModal();
@@ -178,12 +192,24 @@ const AddBookModal = ({ closeModal, editingBook }) => {
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
             <TextField label="Publication" name="publication" fullWidth value={bookData.publication}
               onChange={handleChange} sx={tfSx} />
-            <TextField label="Category" name="category" select fullWidth value={bookData.category}
-              onChange={handleChange} error={!!errors.category} helperText={errors.category} sx={tfSx}>
-              {categories.map((cat) => (
-                <MenuItem key={cat} value={cat}>{cat}</MenuItem>
-              ))}
-            </TextField>
+            <Autocomplete
+              freeSolo
+              options={[...new Set(books.map(b => b.category).filter(Boolean))]}
+              value={bookData.category}
+              onChange={(e, newValue) => {
+                setBookData({ ...bookData, category: newValue || "" });
+                if (errors.category) setErrors({ ...errors, category: "" });
+              }}
+              onInputChange={(e, newInputValue) => {
+                setBookData({ ...bookData, category: newInputValue || "" });
+                if (errors.category) setErrors({ ...errors, category: "" });
+              }}
+              renderInput={(params) => (
+                <TextField {...params} label="Category" name="category" fullWidth
+                  error={!!errors.category} helperText={errors.category || "Type to add new"}
+                  sx={tfSx} />
+              )}
+            />
           </Box>
         </Box>
 
@@ -241,6 +267,11 @@ const AddBookModal = ({ closeModal, editingBook }) => {
           </Typography>
           <input id="cover-upload" type="file" accept="image/*" multiple onChange={handleFileChange}
             style={{ display: "none" }} />
+          {errors.coverImgs && (
+            <Typography sx={{ color: "#d32f2f", fontSize: "0.75rem", mt: 1 }}>
+              {errors.coverImgs}
+            </Typography>
+          )}
         </Box>
 
         {coverPreviews.length > 0 && (

@@ -5,7 +5,8 @@ import {
   Container, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button, Box, Chip, CircularProgress,
   Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip,
-  TextField, InputAdornment, MenuItem, Select, FormControl, Avatar, Divider
+  TextField, InputAdornment, MenuItem, Select, FormControl, Avatar, Divider,
+  Snackbar, Alert
 } from "@mui/material";
 import {
   CheckCircle, Cancel, Visibility, Delete, Refresh,
@@ -21,6 +22,8 @@ const AdminOrdersPage = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, orderId: null });
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const { token } = useAuthStore();
 
   const getToken = () => token || localStorage.getItem("token");
@@ -28,13 +31,14 @@ const AdminOrdersPage = () => {
   const fetchOrders = async () => {
     try {
       const authToken = getToken();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders/admin/orders`, {
         method: "GET",
         headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
       });
       if (!response.ok) throw new Error(`Error: ${await response.text()}`);
       const data = await response.json();
-      setOrders(data.orders || []);
+      // Admin endpoint returns flat array, user endpoint returns { orders: [...] }
+      setOrders(Array.isArray(data) ? data : data.orders || []);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
     }
@@ -51,23 +55,62 @@ const AdminOrdersPage = () => {
         },
         body: JSON.stringify({ status }),
       });
+      setSnackbar({ open: true, message: `Order status updated to ${status}`, severity: "success" });
       fetchOrders();
     } catch (error) {
       console.error("Failed to update order:", error);
+      setSnackbar({ open: true, message: "Failed to update order status", severity: "error" });
     }
   };
 
-  const deleteOrder = async (id) => {
-    if (!confirm("Are you sure you want to delete this order?")) return;
+  const updatePaymentStatus = async (id, paymentStatus) => {
     try {
       const authToken = getToken();
       await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ paymentStatus }),
+      });
+      setSnackbar({ open: true, message: `Payment status updated to ${paymentStatus}`, severity: "success" });
+      fetchOrders();
+      // Update selectedOrder if dialog is open
+      if (selectedOrder && selectedOrder._id === id) {
+        setSelectedOrder(prev => ({
+          ...prev,
+          payment: { ...prev.payment, status: paymentStatus }
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to update payment status:", error);
+      setSnackbar({ open: true, message: "Failed to update payment status", severity: "error" });
+    }
+  };
+
+  const handleDeleteClick = (id) => {
+    setDeleteConfirm({ open: true, orderId: id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = deleteConfirm.orderId;
+    setDeleteConfirm({ open: false, orderId: null });
+    try {
+      const authToken = getToken();
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${authToken}` },
       });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to delete (${response.status})`);
+      }
+      setSnackbar({ open: true, message: "Order deleted successfully", severity: "success" });
       fetchOrders();
     } catch (error) {
       console.error("Failed to delete order:", error);
+      setSnackbar({ open: true, message: `Failed to delete: ${error.message}`, severity: "error" });
     }
   };
 
@@ -92,7 +135,7 @@ const AdminOrdersPage = () => {
       const matchesSearch =
         searchQuery === "" ||
         order._id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (order.user?.fullName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (order.user?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (order.contactInfo?.phone || "").includes(searchQuery) ||
         (order.contactInfo?.email || "").toLowerCase().includes(searchQuery.toLowerCase());
       return matchesStatus && matchesSearch;
@@ -127,6 +170,15 @@ const AdminOrdersPage = () => {
       case "Pending": return { bg: "#fff3e0", color: "#e65100", border: "#ffcc80" };
       case "Processing": return { bg: "#e3f2fd", color: "#1565c0", border: "#90caf9" };
       case "Cancelled": return { bg: "#fbe9e7", color: "#c62828", border: "#ef9a9a" };
+      default: return { bg: "#f5f5f5", color: "#616161", border: "#e0e0e0" };
+    }
+  };
+
+  const getPaymentStatusStyles = (status) => {
+    switch (status) {
+      case "paid": return { bg: "#e8f5e9", color: "#2e7d32", border: "#a5d6a7" };
+      case "pending": return { bg: "#fff3e0", color: "#e65100", border: "#ffcc80" };
+      case "failed": return { bg: "#fbe9e7", color: "#c62828", border: "#ef9a9a" };
       default: return { bg: "#f5f5f5", color: "#616161", border: "#e0e0e0" };
     }
   };
@@ -367,11 +419,11 @@ const AdminOrdersPage = () => {
                             width: 32, height: 32, fontSize: "0.75rem", fontWeight: 700,
                             background: "linear-gradient(135deg, #667eea, #764ba2)"
                           }}>
-                            {(order.user?.fullName || order.contactInfo?.phone || "G").charAt(0).toUpperCase()}
+                            {(order.user?.name || order.contactInfo?.phone || "G").charAt(0).toUpperCase()}
                           </Avatar>
                           <Box>
                             <Typography variant="body2" sx={{ fontWeight: 600, color: "#1a1a2e", lineHeight: 1.3 }}>
-                              {order.user?.fullName || "Guest"}
+                              {order.user?.name || "Guest"}
                             </Typography>
                             <Typography variant="caption" sx={{ color: "#999", fontSize: "0.68rem" }}>
                               {order.contactInfo?.phone || "N/A"}
@@ -409,13 +461,31 @@ const AdminOrdersPage = () => {
                       </TableCell>
 
                       {/* Payment */}
-                      <TableCell>
-                        <Typography variant="body2" sx={{
-                          fontWeight: 500, color: "#555", fontSize: "0.78rem",
-                          textTransform: "uppercase"
-                        }}>
-                          {order.payment?.method || "N/A"}
-                        </Typography>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                          <Typography variant="caption" sx={{ color: "#aaa", fontSize: "0.65rem", textTransform: "uppercase", fontWeight: 600 }}>
+                            {order.payment?.method || "N/A"}
+                          </Typography>
+                          <Chip
+                            label={order.payment?.status || "pending"}
+                            size="small"
+                            onClick={() => {
+                              const statuses = ["pending", "paid", "failed"];
+                              const currentIdx = statuses.indexOf(order.payment?.status || "pending");
+                              const nextStatus = statuses[(currentIdx + 1) % statuses.length];
+                              updatePaymentStatus(order._id, nextStatus);
+                            }}
+                            sx={{
+                              fontWeight: 600, fontSize: "0.65rem", textTransform: "capitalize",
+                              cursor: "pointer", transition: "all 0.2s",
+                              bgcolor: getPaymentStatusStyles(order.payment?.status).bg,
+                              color: getPaymentStatusStyles(order.payment?.status).color,
+                              border: `1px solid ${getPaymentStatusStyles(order.payment?.status).border}`,
+                              borderRadius: "6px",
+                              "&:hover": { transform: "scale(1.05)", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }
+                            }}
+                          />
+                        </Box>
                       </TableCell>
 
                       {/* Date & Time */}
@@ -475,7 +545,7 @@ const AdminOrdersPage = () => {
                           <Tooltip title="Delete" arrow>
                             <IconButton size="small" sx={{
                               color: "#c62828", "&:hover": { bgcolor: "#fbe9e7" }
-                            }} onClick={() => deleteOrder(order._id)}>
+                            }} onClick={() => handleDeleteClick(order._id)}>
                               <Delete sx={{ fontSize: 18 }} />
                             </IconButton>
                           </Tooltip>
@@ -556,7 +626,7 @@ const AdminOrdersPage = () => {
               {/* Customer Info */}
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: "#1a1a2e", display: "flex", alignItems: "center", gap: 0.8 }}>
                 <Avatar sx={{ width: 24, height: 24, fontSize: "0.65rem", background: "linear-gradient(135deg, #667eea, #764ba2)" }}>
-                  {(selectedOrder.user?.fullName || "G").charAt(0).toUpperCase()}
+                  {(selectedOrder.user?.name || "G").charAt(0).toUpperCase()}
                 </Avatar>
                 Customer Information
               </Typography>
@@ -566,7 +636,7 @@ const AdminOrdersPage = () => {
                   <LocalShipping sx={{ fontSize: 18, color: "#667eea" }} />
                   <Box>
                     <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem" }}>Name</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedOrder.user?.fullName || "Guest"}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedOrder.user?.name || "Guest"}</Typography>
                   </Box>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1.5, bgcolor: "#f8f9fc", borderRadius: 2 }}>
@@ -597,7 +667,7 @@ const AdminOrdersPage = () => {
               {/* Payment Info */}
               <Box sx={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
-                p: 2, bgcolor: "#f8f9fc", borderRadius: 2, mb: 3
+                p: 2, bgcolor: "#f8f9fc", borderRadius: 2, mb: 3, flexWrap: "wrap", gap: 2
               }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Payment sx={{ fontSize: 20, color: "#667eea" }} />
@@ -608,14 +678,26 @@ const AdminOrdersPage = () => {
                     </Typography>
                   </Box>
                 </Box>
-                <Box sx={{ textAlign: "right" }}>
-                  <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem" }}>Payment Status</Typography>
-                  <Typography variant="body2" sx={{
-                    fontWeight: 700, textTransform: "capitalize",
-                    color: selectedOrder.payment?.status === "paid" ? "#2e7d32" : "#e65100"
-                  }}>
-                    {selectedOrder.payment?.status || "pending"}
-                  </Typography>
+                <Box>
+                  <Typography variant="caption" sx={{ color: "#999", fontSize: "0.65rem", display: "block", mb: 0.5 }}>Payment Status</Typography>
+                  <FormControl size="small">
+                    <Select
+                      value={selectedOrder.payment?.status || "pending"}
+                      onChange={(e) => updatePaymentStatus(selectedOrder._id, e.target.value)}
+                      sx={{
+                        minWidth: 120, borderRadius: 2, fontWeight: 700, fontSize: "0.8rem",
+                        textTransform: "capitalize",
+                        color: getPaymentStatusStyles(selectedOrder.payment?.status).color,
+                        bgcolor: getPaymentStatusStyles(selectedOrder.payment?.status).bg,
+                        "& fieldset": { borderColor: getPaymentStatusStyles(selectedOrder.payment?.status).border },
+                        "&:hover fieldset": { borderColor: getPaymentStatusStyles(selectedOrder.payment?.status).color + " !important" },
+                      }}
+                    >
+                      <MenuItem value="pending" sx={{ fontWeight: 600, color: "#e65100" }}>⏳ Pending</MenuItem>
+                      <MenuItem value="paid" sx={{ fontWeight: 600, color: "#2e7d32" }}>✅ Paid</MenuItem>
+                      <MenuItem value="failed" sx={{ fontWeight: 600, color: "#c62828" }}>❌ Failed</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
                 {selectedOrder.payment?.transactionId && (
                   <Box sx={{ textAlign: "right" }}>
@@ -725,6 +807,57 @@ const AdminOrdersPage = () => {
           </>
         )}
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={() => setDeleteConfirm({ open: false, orderId: null })}
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, color: "#c62828", display: "flex", alignItems: "center", gap: 1 }}>
+          <Delete sx={{ color: "#c62828" }} />
+          Delete Order
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this order? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={() => setDeleteConfirm({ open: false, orderId: null })}
+            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600, color: "#888" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleDeleteConfirm}
+            sx={{
+              borderRadius: 2, textTransform: "none", fontWeight: 600,
+              bgcolor: "#c62828", "&:hover": { bgcolor: "#b71c1c" }
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for feedback */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%", borderRadius: 2, fontWeight: 600 }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
